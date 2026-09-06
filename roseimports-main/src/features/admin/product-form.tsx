@@ -8,6 +8,7 @@ import {
 import { slugify } from "@/lib/slug";
 import { normalizeProductName } from "@/lib/product-name";
 import { categorySlugForProductType } from "@/lib/product-category";
+import { shouldShowProductDisplaySettings } from "@/features/admin/product-display-settings";
 import type {
   Category,
   OlfactoryFamily,
@@ -437,47 +438,60 @@ export function ProductForm({
 
       {/* EXIBIÇÃO */}
 
-      <fieldset className="border-t border-line pt-7">
-        <legend className="text-sm font-medium text-ink">
-          Exibição no site
-        </legend>
+      {shouldShowProductDisplaySettings(product) ? (
+        <fieldset className="border-t border-line pt-7">
+          <legend className="text-sm font-medium text-ink">
+            Exibição no site
+          </legend>
 
-        <p className="mt-1 text-xs text-muted">
-          Defina como este produto será
-          exibido para os clientes.
-        </p>
+          <p className="mt-1 text-xs text-muted">
+            Defina como este produto será
+            exibido para os clientes.
+          </p>
 
-        <div className="mt-5 space-y-3">
-          <Check
-            name="active"
-            label="Produto ativo"
-            hint="Quando desativado, o produto deixa de aparecer no catálogo, mas permanece salvo no sistema."
-            defaultChecked={
-              product?.active ?? true
-            }
-          />
+          <div className="mt-5 space-y-3">
+            <Check
+              name="active"
+              label="Produto ativo"
+              hint="Quando desativado, o produto deixa de aparecer no catálogo, mas permanece salvo no sistema."
+              defaultChecked={
+                product.active
+              }
+            />
 
-          <Check
-            name="featured"
-            label="Em destaque"
-            hint="Exibe o produto nas áreas de destaque da loja."
-            defaultChecked={
-              product?.featured ??
-              false
-            }
-          />
+            <Check
+              name="featured"
+              label="Em destaque"
+              hint="Exibe o produto nas áreas de destaque da loja."
+              defaultChecked={
+                product.featured
+              }
+            />
 
-          <Check
-            name="promotional"
-            label="Em promoção"
-            hint="Mostra a identificação de promoção no card do produto."
-            defaultChecked={
-              product?.promotional ??
-              false
-            }
-          />
+            <Check
+              name="promotional"
+              label="Em promoção"
+              hint="Mostra a identificação de promoção no card do produto."
+              defaultChecked={
+                product.promotional
+              }
+            />
+          </div>
+        </fieldset>
+      ) : (
+        <div className="border-t border-line pt-7">
+          <h3 className="text-sm font-medium text-ink">
+            Publicação
+          </h3>
+
+          <p className="mt-1 max-w-2xl text-xs leading-relaxed text-muted">
+            O produto será salvo como rascunho.
+            Depois de adicionar preço, estoque e
+            imagens, finalize o cadastro para
+            ativá-lo no catálogo.
+          </p>
         </div>
-      </fieldset>
+      )}
 
       {/* FEEDBACK */}
 

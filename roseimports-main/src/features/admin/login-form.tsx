@@ -54,17 +54,9 @@ export function LoginForm() {
       </div>
 
       <div>
-        <div className="flex items-center justify-between gap-4">
-          <label htmlFor="senha" className="eyebrow">
-            Senha
-          </label>
-          <Link
-            href="/admin/recuperar-senha"
-            className="text-xs text-muted underline underline-offset-4 transition-colors hover:text-ink"
-          >
-            Alterar senha
-          </Link>
-        </div>
+        <label htmlFor="senha" className="eyebrow">
+          Senha
+        </label>
         <input
           id="senha"
           type="password"
@@ -89,6 +81,15 @@ export function LoginForm() {
       >
         {loading ? "Entrando…" : "Entrar"}
       </button>
+
+      <p className="text-center">
+        <Link
+          href="/admin/recuperar-senha"
+          className="text-xs text-muted underline underline-offset-4 transition-colors hover:text-ink"
+        >
+          Alterar senha
+        </Link>
+      </p>
     </form>
   );
 }

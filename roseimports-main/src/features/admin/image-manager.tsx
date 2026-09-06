@@ -14,6 +14,7 @@ import {
   setProductCover,
 } from "@/features/admin/actions";
 import { ConfirmDeleteButton } from "@/features/admin/confirm-delete-button";
+import { imageUploadSummary } from "@/features/admin/image-upload-summary";
 import { imageUrl } from "@/lib/images";
 import type { ProductImage } from "@/types/database";
 
@@ -110,6 +111,7 @@ export function ImageManager({
       createClient();
 
     let uploaded = 0;
+    const failures: string[] = [];
 
     for (const [
       index,
@@ -126,11 +128,9 @@ export function ImageManager({
           file.type,
         )
       ) {
-        setFeedback({
-          ok: false,
-
-          text: `"${file.name}" não é uma imagem aceita. Use JPG, PNG, WebP ou AVIF.`,
-        });
+        failures.push(
+          `${file.name} não é uma imagem.`,
+        );
 
         continue;
       }
@@ -139,11 +139,9 @@ export function ImageManager({
         file.size >
         MAX_BYTES
       ) {
-        setFeedback({
-          ok: false,
-
-          text: `"${file.name}" passa de 5 MB. Reduza a imagem e tente novamente.`,
-        });
+        failures.push(
+          `${file.name} passa de 5 MB.`,
+        );
 
         continue;
       }
@@ -175,11 +173,9 @@ export function ImageManager({
           );
 
       if (error) {
-        setFeedback({
-          ok: false,
-
-          text: `Não foi possível enviar "${file.name}".`,
-        });
+        failures.push(
+          `${file.name} não pôde ser enviada.`,
+        );
 
         continue;
       }
@@ -206,23 +202,22 @@ export function ImageManager({
           )
           .remove([path]);
 
-        setFeedback({
-          ok: false,
-          text: result.error,
-        });
+        failures.push(
+          `${file.name}: ${result.error}`,
+        );
       }
     }
 
+    setFeedback({
+      ok: failures.length === 0,
+      text: imageUploadSummary(
+        uploaded,
+        files.length,
+        failures,
+      ),
+    });
+
     if (uploaded > 0) {
-      setFeedback({
-        ok: true,
-
-        text:
-          uploaded === 1
-            ? "Imagem enviada automaticamente."
-            : `${uploaded} imagens enviadas automaticamente.`,
-      });
-
       /*
        * Atualiza a lista na tela.
        */
