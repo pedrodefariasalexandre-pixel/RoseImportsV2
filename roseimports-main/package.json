@@ -16,14 +16,13 @@
     "typecheck": "tsc --noEmit",
     "create-admin": "tsx scripts/create-admin.ts",
     "db:types": "supabase gen types typescript --project-id $SUPABASE_PROJECT_ID --schema public > src/types/database.ts",
-    "test": "vitest run",
     "test:coupons-concurrency": "tsx scripts/test-coupons-concurrency.mts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.4",
     "@supabase/supabase-js": "^2.45.4",
     "exceljs": "^4.4.0",
-    "next": "^15.1.0",
+    "next": "^15.5.25",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "zod": "^3.23.8"
@@ -43,5 +42,10 @@
     "tsx": "^4.19.2",
     "typescript": "^5.6.3",
     "vitest": "^4.1.11"
+  },
+  "overrides": {
+    "postcss": "^8.5.28",
+    "sharp": "^0.35.4",
+    "uuid": "^11.1.1"
   }
 }
