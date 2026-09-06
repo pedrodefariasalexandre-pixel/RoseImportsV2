@@ -5,11 +5,18 @@ import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { requireAdminUser } from "@/lib/auth/admin";
 import {
-  getAtivosSemEstoqueCount,
   getCatalogCounts,
+  getProductBrands,
 } from "@/features/admin/metrics";
 import { ProductRowActions } from "@/features/admin/product-row-actions";
 import { AdminProductFilters } from "@/features/admin/product-filters";
+import {
+  AdminPagination,
+  first,
+  pageHref,
+  pageNumber,
+  type SearchParams,
+} from "@/features/admin/pagination";
 import {
   ADMIN_PAGE_SIZES,
   ADMIN_PAGE_SIZE_ALL,
@@ -51,17 +58,6 @@ const PRODUCT_SELECT = `
   )
 `;
 
-type SearchParams = Record<string, string | string[] | undefined>;
-
-function first(value: string | string[] | undefined): string {
-  return (Array.isArray(value) ? value[0] : value) ?? "";
-}
-
-function pageNumber(value: string | string[] | undefined): number {
-  const parsed = Number.parseInt(first(value) || "1", 10);
-  return Number.isFinite(parsed) && parsed > 0 ? parsed : 1;
-}
-
 /** `null` = "Todos", opção que só existe no painel. */
 function parsePageSize(value: string): number | null {
   if (value === ADMIN_PAGE_SIZE_ALL) return null;
@@ -72,20 +68,7 @@ function parsePageSize(value: string): number | null {
     : ADMIN_PAGE_SIZE_DEFAULT;
 }
 
-function pageHref(params: SearchParams, page: number): string {
-  const next = new URLSearchParams();
-
-  for (const [key, value] of Object.entries(params)) {
-    const selected = first(value);
-    if (selected) next.set(key, selected);
-  }
-
-  next.delete("pagina");
-  if (page > 1) next.set("pagina", String(page));
-
-  const query = next.toString();
-  return query ? `/admin/produtos?${query}` : "/admin/produtos";
-}
+const BASE_PATH = "/admin/produtos";
 
 type Row = {
   id: string;
@@ -148,30 +131,17 @@ export default async function ProdutosPage({
 
   const supabase = await createClient();
 
-  // Categorias servem ao seletor e à tradução slug → id do filtro.
+  /*
+     Categorias servem ao seletor e à tradução slug → id do filtro.
+
+     É a única consulta que precisa vir antes das outras — o `categoryId`
+     entra no `where` de todas elas. Por isso ela é cacheada na origem
+     (queries.ts): sai da rede e para de segurar a fila. (perf)
+  */
   const categories = await getCategories();
   const categoryId =
     categories.find((category) => category.slug === categoria)?.id ?? null;
   const categoriaInvalida = Boolean(categoria) && categoryId === null;
-
-  // Marca é texto livre: a lista do seletor sai do próprio catálogo.
-  const { data: brandRows, error: brandsError } = await supabase
-    .from("products")
-    .select("brand")
-    .not("brand", "is", null)
-    .order("brand");
-
-  if (brandsError) {
-    throw new Error(brandsError.message);
-  }
-
-  const brands = [
-    ...new Set(
-      (brandRows ?? [])
-        .map((row) => (row.brand ?? "").trim())
-        .filter(Boolean),
-    ),
-  ];
 
   const applyFilters = <
     T extends {
@@ -214,31 +184,46 @@ export default async function ProdutosPage({
   const filtraEstoque = estoque === "sem";
 
   /*
-     A contagem vem antes dos dados porque `.range()` fora do total faz o
-     PostgREST responder 416: a página precisa ser corrigida antes de virar
-     intervalo, não depois da consulta falhar.
+     PRIMEIRA ONDA.
+
+     Marcas, resumo do catálogo e a contagem do filtro corrente não dependem
+     umas das outras. Rodavam em série — quatro round-trips de ~120ms
+     empilhados antes de a listagem sequer começar. Agora saem juntos.
+
+     A contagem precisa vir antes das LINHAS, e só delas: `.range()` fora do
+     total faz o PostgREST responder 416, então a página é corrigida antes de
+     virar intervalo, não depois da consulta falhar. (perf)
   */
-  let total = 0;
+  const [brands, counts, countResult, semEstoqueResult] = await Promise.all([
+    getProductBrands(),
 
-  if (!categoriaInvalida && !filtraEstoque) {
-    const { count, error } = await applyFilters(
-      supabase.from("products").select("id", { count: "exact", head: true }),
-    );
+    // Mesma fonte da tela de Estoque: os dois painéis não podem discordar.
+    // Vale o catálogo inteiro, não os filtros correntes — é um resumo da loja.
+    getCatalogCounts(),
 
-    if (error) throw new Error(error.message);
-    total = count ?? 0;
-  }
+    !categoriaInvalida && !filtraEstoque
+      ? applyFilters(
+          supabase.from("products").select("id", { count: "exact", head: true }),
+        )
+      : null,
+
+    filtraEstoque && !categoriaInvalida
+      ? applyFilters(
+          supabase.from("products").select(PRODUCT_SELECT).order("name"),
+        )
+      : null,
+  ]);
+
+  if (countResult?.error) throw new Error(countResult.error.message);
+  if (semEstoqueResult?.error) throw new Error(semEstoqueResult.error.message);
 
   let rows: Row[] = [];
+  let total = countResult?.count ?? 0;
 
-  if (filtraEstoque && !categoriaInvalida) {
-    const { data, error } = await applyFilters(
-      supabase.from("products").select(PRODUCT_SELECT).order("name"),
+  if (semEstoqueResult) {
+    rows = ((semEstoqueResult.data ?? []) as unknown as Row[]).filter(
+      isSemEstoque,
     );
-
-    if (error) throw new Error(error.message);
-
-    rows = ((data ?? []) as unknown as Row[]).filter(isSemEstoque);
     total = rows.length;
   }
 
@@ -246,11 +231,12 @@ export default async function ProdutosPage({
 
   // Trocar filtro ou quantidade não pode deixar o painel numa página vazia.
   if (currentPage > totalPages) {
-    redirect(pageHref(params, totalPages));
+    redirect(pageHref(BASE_PATH, params, totalPages));
   }
 
   const from = pageSize ? (currentPage - 1) * pageSize : 0;
 
+  // SEGUNDA ONDA: as linhas da página, agora que o total é conhecido.
   if (!filtraEstoque && !categoriaInvalida && total > 0) {
     let query = applyFilters(
       supabase.from("products").select(PRODUCT_SELECT).order("name"),
@@ -268,13 +254,6 @@ export default async function ProdutosPage({
 
   const products =
     filtraEstoque && pageSize ? rows.slice(from, from + pageSize) : rows;
-
-  // Mesma fonte da tela de Estoque: os dois painéis não podem discordar.
-  // Vale o catálogo inteiro, não os filtros correntes — é um resumo da loja.
-  const [counts, semEstoque] = await Promise.all([
-    getCatalogCounts(),
-    getAtivosSemEstoqueCount(),
-  ]);
 
   const hasFilters = Boolean(
     q || categoria || marca || genero || situacao || destaque || estoque,
@@ -344,7 +323,7 @@ export default async function ProdutosPage({
 
         <SummaryItem
           label="Ativos sem estoque"
-          value={semEstoque}
+          value={counts.ativosSemEstoque}
         />
       </section>
 
@@ -614,123 +593,13 @@ export default async function ProdutosPage({
       {/* PAGINAÇÃO */}
 
       <AdminPagination
+        basePath={BASE_PATH}
         currentPage={currentPage}
         totalPages={totalPages}
         params={params}
+        label="de produtos"
       />
     </div>
-  );
-}
-
-/** Mesma regra de páginas visíveis da paginação do catálogo. */
-function visiblePages(currentPage: number, totalPages: number) {
-  const pages = Array.from(
-    { length: totalPages },
-    (_, index) => index + 1,
-  ).filter(
-    (page) =>
-      page === 1 ||
-      page === totalPages ||
-      Math.abs(page - currentPage) <= 1,
-  );
-
-  return pages.reduce<(number | "ellipsis")[]>((items, page, index) => {
-    const previous = pages[index - 1];
-    if (previous && page - previous > 1) items.push("ellipsis");
-    items.push(page);
-    return items;
-  }, []);
-}
-
-function AdminPagination({
-  currentPage,
-  totalPages,
-  params,
-}: {
-  currentPage: number;
-  totalPages: number;
-  params: SearchParams;
-}) {
-  if (totalPages <= 1) return null;
-
-  /*
-     Cor não entra na base: bg-surface/text-ink (ociosa) e bg-ink/text-ivory
-     (página atual) disputariam a mesma propriedade no mesmo elemento, e o
-     Tailwind resolve pela ordem no CSS gerado, não pela ordem na classe —
-     a base venceria e a página atual ficaria com texto branco sobre fundo
-     claro, invisível. Mesmo ajuste já feito na paginação do catálogo.
-  */
-  const baseClass =
-    "inline-flex h-9 min-w-9 items-center justify-center border px-3 text-xs transition-colors";
-  const idleClass = "border-line bg-surface text-ink hover:border-line-strong";
-  const activeClass = "border-ink bg-ink text-ivory hover:border-ink";
-  const controlClass = `${baseClass} ${idleClass}`;
-
-  return (
-    <nav
-      aria-label="Paginação de produtos"
-      className="flex flex-wrap items-center justify-center gap-2"
-    >
-      {currentPage > 1 ? (
-        <Link
-          href={pageHref(params, currentPage - 1)}
-          className={controlClass}
-          rel="prev"
-          aria-label="Página anterior"
-        >
-          <span aria-hidden>←</span>
-        </Link>
-      ) : (
-        <span
-          aria-disabled="true"
-          className={`${controlClass} cursor-not-allowed opacity-40`}
-        >
-          <span aria-hidden>←</span>
-        </span>
-      )}
-
-      {visiblePages(currentPage, totalPages).map((item, index) =>
-        item === "ellipsis" ? (
-          <span
-            key={`ellipsis-${index}`}
-            className="inline-flex h-9 min-w-6 items-center justify-center text-xs text-muted"
-            aria-hidden
-          >
-            …
-          </span>
-        ) : (
-          <Link
-            key={item}
-            href={pageHref(params, item)}
-            aria-current={item === currentPage ? "page" : undefined}
-            aria-label={`Ir para a página ${item}`}
-            className={`${baseClass} ${
-              item === currentPage ? activeClass : idleClass
-            }`}
-          >
-            {item}
-          </Link>
-        ),
-      )}
-
-      {currentPage < totalPages ? (
-        <Link
-          href={pageHref(params, currentPage + 1)}
-          className={controlClass}
-          rel="next"
-          aria-label="Próxima página"
-        >
-          <span aria-hidden>→</span>
-        </Link>
-      ) : (
-        <span
-          aria-disabled="true"
-          className={`${controlClass} cursor-not-allowed opacity-40`}
-        >
-          <span aria-hidden>→</span>
-        </span>
-      )}
-    </nav>
   );
 }
 

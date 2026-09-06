@@ -1,163 +1,89 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { requireAdminUser } from "@/lib/auth/admin";
 import { StockRow } from "@/features/admin/stock-row";
 import { getCatalogCounts } from "@/features/admin/metrics";
-import { normalizeSearchText } from "@/lib/search";
+import {
+  AdminPagination,
+  first,
+  pageHref,
+  pageNumber,
+  type SearchParams,
+} from "@/features/admin/pagination";
 
 export const metadata: Metadata = { title: "Estoque" };
 export const dynamic = "force-dynamic";
 
-type ProductImage = {
-  storage_path: string;
-  alt_text: string | null;
-  sort_order: number;
-};
-
-type Row = {
-  id: string;
-  label: string;
-  price_cents: number | null;
-  stock_quantity: number;
-  active: boolean;
-  sort_order: number;
-  products: {
-    name: string;
-    active: boolean;
-    product_images: ProductImage[];
-  } | null;
-};
-
 type Filtro = "todos" | "criticos" | "sem-estoque";
+
+const BASE_PATH = "/admin/estoque";
+
+/*
+   Antes esta tela não tinha teto: trazia TODA variante do catálogo com o
+   produto e TODAS as imagens aninhadas, e então filtrava, buscava, ordenava
+   e recortava em memória. Com 92 variantes passava despercebido; com dois
+   mil, é payload de megabytes a cada F5.
+
+   Agora quem faz o trabalho é admin_stock_rows() (migration 0017): filtra,
+   busca por nome do produto OU rótulo da versão — sem acento, via
+   normalize_search_text() da migration 0016_busca_sem_acentos —, ordena,
+   devolve a capa já escolhida e o total do conjunto. Uma ida ao banco,
+   uma página de cada vez. (perf)
+*/
+const PAGE_SIZE = 50;
+
+function parseFiltro(value: string): Filtro {
+  return value === "criticos" || value === "sem-estoque" ? value : "todos";
+}
 
 export default async function EstoquePage({
   searchParams,
 }: {
-  searchParams: Promise<{
-    filtro?: Filtro;
-    busca?: string;
-  }>;
+  searchParams: Promise<SearchParams>;
 }) {
   await requireAdminUser();
 
-  const {
-    filtro = "todos",
-    busca = "",
-  } = await searchParams;
+  const params = await searchParams;
+
+  const filtro = parseFiltro(first(params.filtro));
+  const busca = first(params.busca);
+  const currentPage = pageNumber(params.pagina);
 
   const supabase = await createClient();
-  const counts = await getCatalogCounts();
 
-  const { data, error } = await supabase
-    .from("product_variants")
-    .select(`
-      id,
-      label,
-      price_cents,
-      stock_quantity,
-      active,
-      sort_order,
-      products (
-        name,
-        active,
-        product_images (
-          storage_path,
-          alt_text,
-          sort_order
-        )
-      )
-    `)
-    .order("stock_quantity");
+  // Resumo e listagem não dependem um do outro: saem juntos.
+  const [counts, listagem] = await Promise.all([
+    getCatalogCounts(),
 
-  if (error) {
-    throw new Error(error.message);
+    supabase.rpc("admin_stock_rows", {
+      p_filtro: filtro,
+      p_busca: busca,
+      p_limit: PAGE_SIZE,
+      p_offset: (currentPage - 1) * PAGE_SIZE,
+    }),
+  ]);
+
+  if (listagem.error) {
+    throw new Error(listagem.error.message);
   }
 
-  const rows = ((data ?? []) as unknown as Row[])
-    .filter((row) => row.products !== null)
-    .sort((a, b) => {
-      const byName = (a.products?.name ?? "").localeCompare(
-        b.products?.name ?? "",
-        "pt-BR",
-      );
-
-      return byName !== 0
-        ? byName
-        : a.sort_order - b.sort_order;
-    });
+  const rows = listagem.data ?? [];
 
   /*
-   * Produto ativo = produto + variante ativos.
-   */
-  const ativos = rows.filter(
-    (row) =>
-      row.active &&
-      (row.products?.active ?? false),
-  );
+     total_count vem repetido em toda linha (é `count(*) over ()`), então a
+     primeira serve. Sem linha nenhuma, não há total a ler — e aí ou o filtro
+     não casou com nada, ou a página pedida passou do fim.
+  */
+  const total = rows[0]?.total_count ?? 0;
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
-  /*
-   * Estoque baixo:
-   * 1 ou 2 unidades.
-   */
-  const criticos = ativos.filter(
-    (row) =>
-      row.stock_quantity > 0 &&
-      row.stock_quantity <= 2,
-  );
-
-  /*
-   * Produtos zerados.
-   */
-  const semEstoque = ativos.filter(
-    (row) => row.stock_quantity <= 0,
-  );
-
-  /*
-   * Define qual grupo será exibido.
-   */
-  let visible = rows;
-
-  if (filtro === "criticos") {
-    visible = criticos;
+  // Página além do fim (URL editada na mão, ou item removido desde o último
+  // carregamento) volta para a primeira, em vez de mostrar uma tela vazia.
+  if (rows.length === 0 && currentPage > 1) {
+    redirect(pageHref(BASE_PATH, params, 1));
   }
-
-  if (filtro === "sem-estoque") {
-    visible = semEstoque;
-  }
-
-  /*
-   * Busca por produto ou variação.
-   */
-  const termoBusca = normalizeSearchText(busca);
-
-  if (termoBusca) {
-    visible = visible.filter((row) => {
-      const productName = normalizeSearchText(
-        row.products?.name ?? "",
-      );
-
-      const variantLabel = normalizeSearchText(
-        row.label ?? "",
-      );
-
-      return (
-        productName.includes(termoBusca) ||
-        variantLabel.includes(termoBusca)
-      );
-    });
-  }
-
-  /*
-   * Soma total das unidades em estoque
-   * dos produtos ativos.
-   */
-  const totalUnidades = ativos.reduce(
-    (total, row) =>
-      total +
-      Math.max(row.stock_quantity, 0),
-    0,
-  );
 
   return (
     <div className="space-y-6">
@@ -241,18 +167,18 @@ export default async function EstoquePage({
 
         <SummaryItem
           label="Unidades"
-          value={totalUnidades}
+          value={counts.unidadesTotal}
         />
 
         <SummaryItem
           label="Acabando"
-          value={criticos.length}
+          value={counts.variantesCriticas}
           href="/admin/estoque?filtro=criticos"
         />
 
         <SummaryItem
           label="Sem estoque"
-          value={semEstoque.length}
+          value={counts.variantesSemEstoque}
           href="/admin/estoque?filtro=sem-estoque"
         />
       </section>
@@ -360,9 +286,9 @@ export default async function EstoquePage({
           >
             Acabando
 
-            {criticos.length > 0 && (
+            {counts.variantesCriticas > 0 && (
               <span className="ml-1 opacity-70">
-                ({criticos.length})
+                ({counts.variantesCriticas})
               </span>
             )}
           </FilterLink>
@@ -379,9 +305,9 @@ export default async function EstoquePage({
           >
             Sem estoque
 
-            {semEstoque.length > 0 && (
+            {counts.variantesSemEstoque > 0 && (
               <span className="ml-1 opacity-70">
-                ({semEstoque.length})
+                ({counts.variantesSemEstoque})
               </span>
             )}
           </FilterLink>
@@ -392,9 +318,9 @@ export default async function EstoquePage({
 
       {busca && (
         <p className="text-xs text-muted">
-          {visible.length === 1
+          {total === 1
             ? "1 resultado encontrado"
-            : `${visible.length} resultados encontrados`}{" "}
+            : `${total} resultados encontrados`}{" "}
           para{" "}
           <span className="font-medium text-ink">
             “{busca}”
@@ -404,7 +330,7 @@ export default async function EstoquePage({
 
       {/* TABELA */}
 
-      {visible.length > 0 ? (
+      {rows.length > 0 ? (
         <div className="overflow-hidden border border-line bg-surface">
           <div className="overflow-x-auto">
             <table className="w-full min-w-[50rem] text-sm">
@@ -429,59 +355,25 @@ export default async function EstoquePage({
               </thead>
 
               <tbody className="divide-y divide-line">
-                {visible.map((row) => {
-                  /*
-                   * Usa a primeira imagem
-                   * pela ordem definida.
-                   */
-                  const images = [
-                    ...(row.products
-                      ?.product_images ??
-                      []),
-                  ].sort(
-                    (a, b) =>
-                      a.sort_order -
-                      b.sort_order,
-                  );
-
-                  const cover =
-                    images[0] ??
-                    null;
-
-                  return (
-                    <StockRow
-                      key={row.id}
-                      variantId={
-                        row.id
-                      }
-                      productName={
-                        row.products
-                          ?.name ??
-                        "—"
-                      }
-                      productImagePath={
-                        cover
-                          ?.storage_path ??
-                        null
-                      }
-                      variantLabel={
-                        row.label
-                      }
-                      stockQuantity={
-                        row.stock_quantity
-                      }
-                      priceCents={
-                        row.price_cents
-                      }
-                      active={
-                        row.active &&
-                        (row.products
-                          ?.active ??
-                          false)
-                      }
-                    />
-                  );
-                })}
+                {rows.map((row) => (
+                  <StockRow
+                    key={row.id}
+                    variantId={row.id}
+                    productName={row.product_name}
+                    productImagePath={
+                      row.cover_storage_path
+                    }
+                    variantLabel={row.label}
+                    stockQuantity={
+                      row.stock_quantity
+                    }
+                    priceCents={row.price_cents}
+                    active={
+                      row.active &&
+                      row.product_active
+                    }
+                  />
+                ))}
               </tbody>
             </table>
           </div>
@@ -523,6 +415,16 @@ export default async function EstoquePage({
           )}
         </div>
       )}
+
+      {/* PAGINAÇÃO */}
+
+      <AdminPagination
+        basePath={BASE_PATH}
+        currentPage={currentPage}
+        totalPages={totalPages}
+        params={params}
+        label="do estoque"
+      />
     </div>
   );
 }
@@ -625,6 +527,9 @@ function Th({
 
 /* ---------------------------------------------------------------
    URL DOS FILTROS
+
+   Trocar de filtro ou de busca zera a paginação de propósito: a
+   página 7 do filtro anterior quase nunca existe no próximo.
 ---------------------------------------------------------------- */
 
 function buildFilterUrl(
@@ -658,6 +563,9 @@ function buildFilterUrl(
 
 /* ---------------------------------------------------------------
    URL DE EXPORTAÇÃO
+
+   A exportação continua trazendo o conjunto inteiro, sem página: é
+   uma planilha, e planilha pela metade não serve para nada.
 ---------------------------------------------------------------- */
 
 function buildExportUrl(

@@ -1,4 +1,5 @@
-import { createClient } from "@/lib/supabase/server";
+import { unstable_cache } from "next/cache";
+import { createClient, createPublicClient } from "@/lib/supabase/server";
 import { searchOrFilters } from "@/lib/search";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { aggregateStockStatus, stockStatus } from "@/lib/stock";
@@ -581,17 +582,37 @@ export async function getProductSlugs(): Promise<string[]> {
   return (data ?? []).map((r) => r.slug);
 }
 
-export async function getCategories(): Promise<Category[]> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("categories")
-    .select("id, name, slug")
-    .eq("active", true)
-    .order("sort_order");
+/**
+ * Categorias ativas — a lista que alimenta o filtro do catálogo e o do painel.
+ *
+ * Cacheada porque é o oposto de um dado quente: quatro linhas que mudam
+ * quando alguém edita a taxonomia, ou seja, quase nunca. Sem cache, ela
+ * abria a fila de consultas de /admin/produtos: as demais dependiam dela
+ * só para traduzir o slug da URL em id, e ficavam esperando um round-trip
+ * de ~115ms que sempre devolve o mesmo. (perf)
+ *
+ * Client sem cookie de propósito: `unstable_cache` proíbe ler `cookies()`,
+ * e categoria ativa é dado público — as policies devolvem o mesmo para
+ * visitante e para admin. Revalida sozinha a cada 5 minutos; quem mexer em
+ * categoria pode forçar na hora com `revalidateTag(CATEGORIES_TAG)`.
+ */
+export const CATEGORIES_TAG = "categorias-ativas";
 
-  if (error) throw new Error(error.message);
-  return (data ?? []) as Category[];
-}
+export const getCategories = unstable_cache(
+  async (): Promise<Category[]> => {
+    const supabase = createPublicClient();
+    const { data, error } = await supabase
+      .from("categories")
+      .select("id, name, slug")
+      .eq("active", true)
+      .order("sort_order");
+
+    if (error) throw new Error(error.message);
+    return (data ?? []) as Category[];
+  },
+  [CATEGORIES_TAG],
+  { revalidate: 300, tags: [CATEGORIES_TAG] },
+);
 
 export async function getOlfactoryFamilies(): Promise<OlfactoryFamily[]> {
   const supabase = await createClient();

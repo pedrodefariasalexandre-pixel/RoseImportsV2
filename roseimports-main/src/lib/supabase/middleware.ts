@@ -31,9 +31,19 @@ export async function updateSession(request: NextRequest) {
     },
   );
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  /*
+     getClaims() renova a sessão igual ao getUser() — por dentro ele passa
+     pelo getSession(), que troca o refresh token e devolve os cookies novos
+     pelo setAll() acima. A diferença é onde a assinatura é conferida:
+     getUser() pergunta ao Auth server (round-trip por requisição), getClaims()
+     valida localmente com a chave pública do projeto (ES256), buscada uma vez
+     por processo e revalidada a cada 10min.
+
+     Token expirado, forjado ou de outro projeto continua sendo recusado — só
+     não custa mais uma viagem de rede para descobrir isso. (perf)
+  */
+  const { data } = await supabase.auth.getClaims();
+  const user = data?.claims ?? null;
 
   const path = request.nextUrl.pathname;
   const isAdminArea = path.startsWith("/admin");

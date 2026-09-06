@@ -1,3 +1,4 @@
+import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { supabasePublishableKey, supabaseUrl } from "@/lib/supabase/keys";
@@ -30,5 +31,24 @@ export async function createClient() {
         },
       },
     },
+  );
+}
+
+/**
+ * Client de servidor SEM sessão: chave pública, papel `anon`, RLS ativo.
+ *
+ * Existe por uma restrição do Next: dentro de `unstable_cache` não se pode
+ * ler `cookies()` — o valor cacheado é compartilhado entre requisições, e o
+ * framework barra qualquer coisa que dependa de quem está pedindo.
+ *
+ * Serve só para leitura de dado público e igual para todo mundo (categorias,
+ * famílias olfativas). Nada de painel passa por aqui: sem cookie, `is_admin()`
+ * é falso e as policies só liberam o catálogo ativo. (§34)
+ */
+export function createPublicClient() {
+  return createSupabaseClient<Database>(
+    supabaseUrl(),
+    supabasePublishableKey(),
+    { auth: { persistSession: false, autoRefreshToken: false } },
   );
 }

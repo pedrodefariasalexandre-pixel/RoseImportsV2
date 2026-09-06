@@ -10,73 +10,67 @@ import { createClient } from "@/lib/supabase/server";
 
    Definições, uma vez:
 
-   - produtosTotal   → todo registro em products, ativo ou não.
-   - produtosAtivos  → products.active = true.
-   - variantesAtivas → versão ativa de um produto também ativo. Versão
-                       ativa de produto desativado não está à venda e
-                       não entra na conta.
+   - produtosTotal        → todo registro em products, ativo ou não.
+   - produtosAtivos       → products.active = true.
+   - variantesAtivas      → versão ativa de um produto também ativo. Versão
+                            ativa de produto desativado não está à venda e
+                            não entra na conta.
+   - ativosSemEstoque     → produto ativo, com versões ativas, cuja soma de
+                            estoque zerou.
+   - unidadesTotal        → soma do estoque das versões à venda.
+   - variantesCriticas    → versão à venda com 1 ou 2 unidades.
+   - variantesSemEstoque  → versão à venda zerada.
+
+   As três primeiras vinham de três consultas com `count: exact`; as demais
+   vinham de varreduras que traziam o catálogo inteiro só para reduzir no
+   JavaScript. Eram 5 idas ao Supabase por tela. Agora é uma chamada à
+   função admin_catalog_summary(), que faz as sete contas em uma passada.
+   (migration 0016)
    --------------------------------------------------------------- */
 
 export type CatalogCounts = {
   produtosTotal: number;
   produtosAtivos: number;
   variantesAtivas: number;
+  ativosSemEstoque: number;
+  unidadesTotal: number;
+  variantesCriticas: number;
+  variantesSemEstoque: number;
 };
 
 export async function getCatalogCounts(): Promise<CatalogCounts> {
   const supabase = await createClient();
 
-  const [total, ativos, variantes] = await Promise.all([
-    supabase.from("products").select("id", { count: "exact", head: true }),
+  const { data, error } = await supabase
+    .rpc("admin_catalog_summary")
+    .single();
 
-    supabase
-      .from("products")
-      .select("id", { count: "exact", head: true })
-      .eq("active", true),
-
-    // !inner força o join, para o filtro no produto valer de verdade.
-    supabase
-      .from("product_variants")
-      .select("id, products!inner(active)", { count: "exact", head: true })
-      .eq("active", true)
-      .eq("products.active", true),
-  ]);
-
-  const firstError = total.error ?? ativos.error ?? variantes.error;
-  if (firstError) throw new Error(firstError.message);
+  if (error) throw new Error(error.message);
 
   return {
-    produtosTotal: total.count ?? 0,
-    produtosAtivos: ativos.count ?? 0,
-    variantesAtivas: variantes.count ?? 0,
+    produtosTotal: data.produtos_total,
+    produtosAtivos: data.produtos_ativos,
+    variantesAtivas: data.variantes_ativas,
+    ativosSemEstoque: data.ativos_sem_estoque,
+    unidadesTotal: data.unidades_total,
+    variantesCriticas: data.variantes_criticas,
+    variantesSemEstoque: data.variantes_sem_estoque,
   };
 }
 
 /**
- * Produtos ativos, com versões ativas, cuja soma de estoque zerou.
+ * Marcas distintas do catálogo, para o seletor de filtro.
  *
- * Fica junto das demais contagens porque é lido pelo mesmo resumo: vale o
- * catálogo inteiro, não o filtro corrente da tabela.
+ * O painel lia a coluna `brand` de todos os produtos e montava um Set no
+ * JavaScript: payload proporcional ao catálogo para preencher um <select>
+ * de algumas dezenas de opções. `distinct` é trabalho de banco. (perf)
  */
-export async function getAtivosSemEstoqueCount(): Promise<number> {
+export async function getProductBrands(): Promise<string[]> {
   const supabase = await createClient();
 
-  const { data, error } = await supabase
-    .from("products")
-    .select("id, product_variants ( stock_quantity, active )")
-    .eq("active", true);
+  const { data, error } = await supabase.rpc("admin_product_brands");
 
   if (error) throw new Error(error.message);
 
-  const rows = (data ?? []) as unknown as {
-    id: string;
-    product_variants: { stock_quantity: number; active: boolean }[];
-  }[];
-
-  return rows.filter((row) => {
-    const ativas = row.product_variants.filter((variant) => variant.active);
-    if (ativas.length === 0) return false;
-
-    return ativas.reduce((sum, variant) => sum + variant.stock_quantity, 0) <= 0;
-  }).length;
+  return (data ?? []).map((row) => row.brand);
 }

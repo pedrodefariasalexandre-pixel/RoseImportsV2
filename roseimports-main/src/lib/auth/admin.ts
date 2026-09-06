@@ -32,24 +32,47 @@ export const getAdminUser = cache(async (): Promise<AdminUser | null> => {
 
   const supabase = await createClient();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  /*
+     getClaims(), não getUser().
 
-  if (!user) return null;
+     getUser() é uma chamada de rede ao Auth server a cada renderização.
+     Como o middleware já valida a sessão antes de qualquer tela do painel
+     (matcher "/admin/:path*"), eram DUAS idas ao Supabase por navegação —
+     ~220ms antes de a primeira consulta ao catálogo começar. (perf)
+
+     getClaims() faz a mesma verificação criptográfica sem sair daqui: o
+     projeto assina o JWT com chave assimétrica (ES256), e a auth-js valida
+     a assinatura com a chave pública do JWKS, guardada num cache de módulo
+     compartilhado entre instâncias do client e revalidado a cada 10min.
+     Uma busca no JWKS por processo, não por requisição.
+
+     Não é getSession(): aquele lê o cookie e acredita nele. Este confere a
+     assinatura — token forjado ou adulterado não passa. Se um dia o projeto
+     voltar para chave simétrica (HS256), a própria auth-js cai sozinha no
+     getUser() de rede: fica mais lento, nunca inseguro.
+
+     E a barreira final continua sendo o RLS: is_admin() é reavaliado no
+     banco em toda query, com o token desta requisição. (§34)
+  */
+  const { data, error } = await supabase.auth.getClaims();
+
+  const claims = data?.claims;
+  if (error || !claims?.sub) return null;
+
+  const email = typeof claims.email === "string" ? claims.email : "";
 
   const { data: profile } = await supabase
     .from("profiles")
     .select("full_name")
-    .eq("id", user.id)
+    .eq("id", claims.sub)
     .maybeSingle();
 
   if (!profile) return null;
 
   return {
-    id: user.id,
-    email: user.email ?? "",
-    name: profile.full_name || user.email || "Administrador",
+    id: claims.sub,
+    email,
+    name: profile.full_name || email || "Administrador",
   };
 });
 

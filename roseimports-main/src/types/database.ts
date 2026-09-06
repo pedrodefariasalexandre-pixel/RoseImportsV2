@@ -502,6 +502,81 @@ export type Database = {
 
         Returns: boolean;
       };
+
+      admin_can_read: {
+        Args: Record<
+          string,
+          never
+        >;
+
+        Returns: boolean;
+      };
+
+      admin_catalog_summary: {
+        Args: Record<
+          string,
+          never
+        >;
+
+        Returns: {
+          produtos_total: number;
+          produtos_ativos: number;
+          variantes_ativas: number;
+          ativos_sem_estoque: number;
+          unidades_total: number;
+          variantes_criticas: number;
+          variantes_sem_estoque: number;
+        }[];
+      };
+
+      admin_product_brands: {
+        Args: Record<
+          string,
+          never
+        >;
+
+        Returns: {
+          brand: string;
+        }[];
+      };
+
+      admin_stock_rows: {
+        Args: {
+          p_filtro?: string;
+          p_busca?: string;
+          p_limit?: number;
+          p_offset?: number;
+        };
+
+        Returns: {
+          id: string;
+          label: string;
+          price_cents: number | null;
+          stock_quantity: number;
+          active: boolean;
+          product_name: string;
+          product_active: boolean;
+          cover_storage_path: string | null;
+          total_count: number;
+        }[];
+      };
+
+      admin_order_status_counts: {
+        Args: Record<
+          string,
+          never
+        >;
+
+        Returns: {
+          total: number;
+          novo: number;
+          em_atendimento: number;
+          pago: number;
+          entregue: number;
+          retirado: number;
+          cancelado: number;
+        }[];
+      };
     };
 
     Enums: Record<
