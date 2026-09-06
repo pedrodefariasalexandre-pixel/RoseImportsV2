@@ -2,6 +2,7 @@ import ExcelJS from "exceljs";
 import { NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { requireAdminUser } from "@/lib/auth/admin";
+import { normalizeSearchText } from "@/lib/search";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -113,14 +114,16 @@ export async function GET(request: NextRequest) {
    * Respeita a busca atual da tela.
    */
   if (busca) {
-    const termo = busca.toLowerCase();
+    const termo = normalizeSearchText(busca);
 
     rows = rows.filter((row) => {
-      const productName =
-        row.products?.name.toLowerCase() ?? "";
+      const productName = normalizeSearchText(
+        row.products?.name ?? "",
+      );
 
-      const variantLabel =
-        row.label.toLowerCase();
+      const variantLabel = normalizeSearchText(
+        row.label,
+      );
 
       return (
         productName.includes(termo) ||

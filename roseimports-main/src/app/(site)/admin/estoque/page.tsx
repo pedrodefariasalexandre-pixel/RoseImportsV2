@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { requireAdminUser } from "@/lib/auth/admin";
 import { StockRow } from "@/features/admin/stock-row";
 import { getCatalogCounts } from "@/features/admin/metrics";
+import { normalizeSearchText } from "@/lib/search";
 
 export const metadata: Metadata = { title: "Estoque" };
 export const dynamic = "force-dynamic";
@@ -128,18 +129,17 @@ export default async function EstoquePage({
   /*
    * Busca por produto ou variação.
    */
-  const termoBusca = busca
-    .trim()
-    .toLowerCase();
+  const termoBusca = normalizeSearchText(busca);
 
   if (termoBusca) {
     visible = visible.filter((row) => {
-      const productName =
-        row.products?.name
-          ?.toLowerCase() ?? "";
+      const productName = normalizeSearchText(
+        row.products?.name ?? "",
+      );
 
-      const variantLabel =
-        row.label?.toLowerCase() ?? "";
+      const variantLabel = normalizeSearchText(
+        row.label ?? "",
+      );
 
       return (
         productName.includes(termoBusca) ||

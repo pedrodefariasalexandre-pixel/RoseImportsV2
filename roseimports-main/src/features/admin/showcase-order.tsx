@@ -5,6 +5,7 @@ import { ProductImage } from "@/components/product-image";
 import { saveShowcaseOrder } from "@/features/admin/actions";
 import type { ProductCard } from "@/features/catalog/queries";
 import { formatCents } from "@/lib/money";
+import { normalizeSearchText } from "@/lib/search";
 
 /* ---------------------------------------------------------------
    Organização da vitrine.
@@ -31,7 +32,7 @@ export function ShowcaseOrder({ products }: { products: ProductCard[] }) {
   // Uma edição no catálogo (produto novo, desativado) troca a lista base.
   useEffect(() => setOrder(products), [products]);
 
-  const termo = busca.trim().toLowerCase();
+  const termo = normalizeSearchText(busca);
   const buscando = termo.length > 0;
 
   const visiveis = useMemo(() => {
@@ -40,9 +41,9 @@ export function ShowcaseOrder({ products }: { products: ProductCard[] }) {
     return order.filter((product) => {
       const alvo = `${product.name} ${product.brand ?? ""} ${
         product.categoryName ?? ""
-      }`.toLowerCase();
+      }`;
 
-      return alvo.includes(termo);
+      return normalizeSearchText(alvo).includes(termo);
     });
   }, [order, termo, buscando]);
 

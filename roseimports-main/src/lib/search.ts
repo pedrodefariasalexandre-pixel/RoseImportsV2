@@ -1,5 +1,5 @@
 /**
- * Busca por texto livre nas consultas do PostgREST.
+ * Busca por texto livre nas consultas do PostgREST e nas listas locais.
  *
  * O termo digitado vai parar dentro do filtro `or=(...)`, onde vírgula,
  * parêntese, ponto e dois-pontos são separadores da sintaxe. Interpolar o
@@ -9,6 +9,22 @@
 
 /** Quantas palavras do termo entram na consulta antes de virar ruído. */
 const MAX_TOKENS = 5;
+
+/**
+ * Produz a mesma forma pesquisável gravada em `products.search_text` pela
+ * migração 0016: sem acentos, sem diferença entre maiúsculas/minúsculas e
+ * com sinais tratados como separadores.
+ */
+export function normalizeSearchText(value: string): string {
+  return value
+    .normalize("NFD")
+    .replace(/\p{M}/gu, "")
+    .toLocaleLowerCase("pt-BR")
+    .replace(/º/g, "o")
+    .replace(/ª/g, "a")
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+}
 
 /**
  * Envolve o valor em aspas duplas, que é como o PostgREST aceita
@@ -31,10 +47,10 @@ function quote(value: string): string {
  */
 export function searchOrFilters(
   term: string,
-  columns: readonly string[] = ["name", "brand"],
+  columns: readonly string[] = ["search_text"],
 ): string[] {
-  return term
-    .split(/[\s,]+/)
+  return normalizeSearchText(term)
+    .split(/\s+/)
     .filter(Boolean)
     .slice(0, MAX_TOKENS)
     .map((token) =>

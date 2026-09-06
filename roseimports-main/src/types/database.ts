@@ -105,6 +105,11 @@ export type Product = Timestamps & {
     | null;
 };
 
+/** Coluna gerada pelo banco, disponível apenas na leitura. */
+type ProductRow = Product & {
+  search_text: string;
+};
+
 export type ProductVariant =
   Timestamps & {
     id: string;
@@ -391,7 +396,11 @@ export type Database = {
       olfactory_families:
         Table<OlfactoryFamily>;
 
-      products: Table<Product>;
+      products: Table<
+        ProductRow,
+        Partial<Product>,
+        Partial<Product>
+      >;
 
       product_variants:
         Table<ProductVariant>;
@@ -435,6 +444,14 @@ export type Database = {
     };
 
     Functions: {
+      normalize_search_text: {
+        Args: {
+          value: string;
+        };
+
+        Returns: string;
+      };
+
       mark_order_paid: {
         Args: {
           p_order_id: string;
