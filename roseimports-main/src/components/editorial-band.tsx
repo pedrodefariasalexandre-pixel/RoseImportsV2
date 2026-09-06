@@ -35,7 +35,7 @@ export function EditorialBand() {
         className="
           mx-auto grid max-w-7xl
           overflow-hidden rounded-2xl
-          bg-ink text-ivory
+          bg-surface text-ivory
           lg:grid-cols-[1fr_1.15fr]
         "
       >
@@ -44,6 +44,7 @@ export function EditorialBand() {
           className="
             order-2
             flex flex-col justify-center
+            bg-ink
             px-6 py-8
             sm:px-8 sm:py-10
             lg:order-1
