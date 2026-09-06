@@ -1,7 +1,21 @@
 import "server-only";
 
 import { createClient } from "@supabase/supabase-js";
+import { supabaseUrl } from "@/lib/supabase/keys";
 import type { Database } from "@/types/database";
+
+function supabaseSecretKey(): string {
+  const key =
+    process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!key) {
+    throw new Error(
+      "Configure SUPABASE_SECRET_KEY (sb_secret_...) no .env.local",
+    );
+  }
+
+  return key;
+}
 
 /**
  * Client com service role: IGNORA RLS.
@@ -12,10 +26,7 @@ import type { Database } from "@/types/database";
  * do navegador. (§34, §70)
  */
 export function createAdminClient() {
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!key) throw new Error("SUPABASE_SERVICE_ROLE_KEY não configurada");
-
-  return createClient<Database>(process.env.NEXT_PUBLIC_SUPABASE_URL!, key, {
+  return createClient<Database>(supabaseUrl(), supabaseSecretKey(), {
     auth: { persistSession: false, autoRefreshToken: false },
   });
 }

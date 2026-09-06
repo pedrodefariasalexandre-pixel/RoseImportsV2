@@ -206,7 +206,7 @@ export function HeroCarousel() {
           h-[300px]
           overflow-hidden
           rounded-r-2xl
-          bg-ivory-deep
+          bg-surface
           sm:h-[360px]
           lg:h-full
         "
@@ -214,7 +214,7 @@ export function HeroCarousel() {
         <ProductImage
           path={product.imagePath}
           alt={product.imageAlt ?? product.name}
-          sizes="(max-width: 1024px) 100vw, 45vw"
+          sizes="(max-width: 1024px) 100vw, (max-width: 1280px) 45vw, 547px"
           priority
           className="object-contain object-center"
         />

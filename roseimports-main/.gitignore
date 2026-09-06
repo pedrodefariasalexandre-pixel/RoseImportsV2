@@ -1,7 +1,15 @@
 node_modules/
 .next/
+.claude/
+/AGENTS.md
+/CLAUDE.md
+/ALTERACOES-CLIENTE.md
+/AUDITORIA-COMPLETA-PRODUTO.*
 out/
 build/
+coverage/
+.turbo/
+*.log
 .env
 .env.local
 .env*.local

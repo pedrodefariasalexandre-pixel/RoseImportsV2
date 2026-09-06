@@ -36,7 +36,7 @@ export function EditorialBand() {
           mx-auto grid max-w-7xl
           overflow-hidden rounded-2xl
           bg-ink text-ivory
-          lg:grid-cols-[0.82fr_1.18fr]
+          lg:grid-cols-[1fr_1.15fr]
         "
       >
         {/* TEXTO */}
@@ -48,28 +48,28 @@ export function EditorialBand() {
             sm:px-8 sm:py-10
             lg:order-1
             lg:px-10 lg:py-10
-            xl:px-12
+            xl:px-14
           "
         >
-          <p className="text-xs font-semibold text-gold-soft">
+          <p className="text-sm font-bold tracking-[0.08em] text-gold-soft uppercase">
             Destaque Rose Imports
           </p>
 
           {editorialProduct.brand && (
-            <p className="mt-3 text-sm text-ivory/55">
+            <p className="mt-4 text-base text-ivory/60">
               {editorialProduct.brand}
             </p>
           )}
 
           <h2
             className="
-              mt-1 max-w-lg
-              text-2xl font-bold
-              leading-[1.15]
+              mt-1 max-w-xl
+              text-3xl font-bold
+              leading-[1.1]
               tracking-[-0.025em]
               text-ivory
-              sm:text-3xl
-              lg:text-[2.25rem]
+              sm:text-4xl
+              lg:text-[2.75rem]
             "
           >
             {editorialTitle(editorialProduct)}
@@ -78,13 +78,12 @@ export function EditorialBand() {
           {editorialProduct.description && (
             <p
               className="
-                mt-4
+                mt-5
                 max-w-[48ch]
                 line-clamp-3
-                text-sm
-                leading-6
+                text-base
+                leading-7
                 text-ivory/65
-                sm:text-[0.95rem]
               "
             >
               {editorialProduct.description}
@@ -92,14 +91,14 @@ export function EditorialBand() {
           )}
 
           {editorialProduct.fromPriceCents !== null && (
-            <div className="mt-5">
+            <div className="mt-6">
               {editorialProduct.variantCount > 1 && (
                 <p className="mb-1 text-xs text-ivory/45">
                   A partir de
                 </p>
               )}
 
-              <p className="text-2xl font-bold tracking-[-0.02em] text-ivory">
+              <p className="text-3xl font-bold tracking-[-0.02em] text-ivory">
                 {formatCents(
                   editorialProduct.fromPriceCents,
                 )}
@@ -148,27 +147,49 @@ export function EditorialBand() {
           </div>
         </div>
 
-        {/* IMAGEM */}
+        {/* IMAGEM
+            "Destaque" precisa parecer maior que os outros cards da
+            página, não caber justo. Por isso o painel:
+            - domina a faixa (coluna mais larga que o texto, altura bem
+              acima do card comum);
+            - tem um brilho radial atrás do produto — dá presença mesmo
+              quando a própria foto trouxer bastante respiro em volta,
+              que é como a maioria das fotos de frasco/caixa vem;
+            - a foto ocupa o painel inteiro, sem padding: várias fotos do
+              catálogo vêm com fundo cinza-claro em vez de branco puro,
+              e qualquer respiro em volta faz a borda desse fundo virar
+              um retângulo visível dentro do painel;
+            - altura é piso (min-h), não altura fixa: com título ou
+              descrição longos a coluna de texto cresce e o painel
+              acompanha, em vez de deixar sobrar o bg-ink da faixa. */}
         <div
           className="
             order-1
             relative
-            h-[300px]
+            min-h-[340px]
             overflow-hidden
-            bg-ivory-deep
-            sm:h-[360px]
+            bg-surface
+            sm:min-h-[420px]
             lg:order-2
-            lg:h-[420px]
+            lg:min-h-[500px]
           "
         >
+          <div
+            aria-hidden
+            className="
+              pointer-events-none absolute inset-0
+              bg-[radial-gradient(ellipse_60%_55%_at_50%_50%,var(--color-rose-wash)_0%,transparent_70%)]
+            "
+          />
+
           <ProductImageGallery
             images={editorialProduct.images}
             fallbackPath={editorialProduct.imagePath}
             fallbackAlt={editorialProduct.imageAlt}
             productName={editorialProduct.name}
             productHref={`/produto/${editorialProduct.slug}`}
-            sizes="(max-width: 1024px) 100vw, 58vw"
-            className="h-full w-full"
+            sizes="(max-width: 1024px) 100vw, (max-width: 1280px) 55vw, 650px"
+            className="absolute inset-0"
             imageClassName="object-contain object-center"
           />
         </div>

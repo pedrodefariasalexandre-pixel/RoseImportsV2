@@ -25,7 +25,10 @@ export function ProductCard({
       "
     >
       <div className="flex h-full flex-col p-3 sm:p-4">
-        <div className="relative aspect-square overflow-hidden rounded-xl bg-gradient-to-br from-surface to-ivory-deep ring-1 ring-inset ring-line/70">
+        {/* Moldura branca: a foto de produto vem sobre branco, então
+            a sobra do object-contain some. O anel continua desenhando a
+            borda do quadro. */}
+        <div className="relative aspect-square overflow-hidden rounded-xl bg-surface ring-1 ring-inset ring-line/70">
           <ProductImageGallery
             images={product.images}
             fallbackPath={product.imagePath}

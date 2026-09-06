@@ -8,6 +8,14 @@ Não há checkout nem pagamento online. O site monta o pedido, registra a inten�
 
 ---
 
+## Fluxo obrigatório do Git
+
+Todas as alterações deste projeto devem ser aplicadas e commitadas diretamente na branch `main`. Não crie branches auxiliares, branches de funcionalidade ou branches de entrega.
+
+Antes de iniciar alterações, atualize a `main` local com o remoto. Depois de validar lint, tipos, testes e build, publique a própria `main`.
+
+---
+
 ## Interface desta versão
 
 - identidade visual e paleta originais preservadas;
