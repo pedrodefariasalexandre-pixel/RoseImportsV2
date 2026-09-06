@@ -41,32 +41,34 @@ export function AdminNav({ userName }: { userName: string | null }) {
 
           <Link
             href={authenticated ? "/admin" : "/admin/login"}
-            className="truncate text-sm font-semibold text-ink"
+            className="flex min-w-0 items-baseline gap-1 truncate text-sm font-semibold text-ink"
           >
             <span className="sm:hidden">Painel</span>
             <span className="hidden sm:inline">Painel administrativo</span>
+            {userName && (
+              <>
+                <span className="text-muted" aria-hidden>
+                  /
+                </span>
+                <span className="truncate text-muted">{userName}</span>
+              </>
+            )}
           </Link>
         </div>
 
-        <div className="flex shrink-0 items-center gap-3 sm:gap-4">
-          {userName && (
-            <span className="hidden max-w-40 truncate text-xs text-muted lg:inline">
-              {userName}
-            </span>
-          )}
-
+        <div className="flex shrink-0 items-center gap-2">
           <Link
             href="/"
-            className="text-xs font-medium tracking-[0.08em] text-muted uppercase transition-colors hover:text-rose"
+            className="inline-flex h-9 w-20 items-center justify-center rounded-md border border-line bg-surface px-2 text-[0.68rem] font-semibold tracking-[0.06em] text-muted uppercase transition-colors hover:border-rose-soft hover:text-rose sm:w-24 sm:text-xs"
           >
             Ver loja
           </Link>
 
           {authenticated && (
-            <form action={signOut}>
+            <form action={signOut} className="flex">
               <button
                 type="submit"
-                className="text-xs font-medium tracking-[0.08em] text-muted uppercase transition-colors hover:text-danger"
+                className="inline-flex h-9 w-20 items-center justify-center rounded-md border border-line bg-surface px-2 text-[0.68rem] font-semibold tracking-[0.06em] text-muted uppercase transition-colors hover:border-danger/35 hover:bg-danger/5 hover:text-danger sm:w-24 sm:text-xs"
               >
                 Sair
               </button>
