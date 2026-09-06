@@ -61,13 +61,6 @@ const createVariantSchema = z.object({
   productId: z.string().uuid(),
 });
 
-const incrementVariantSchema = z.object({
-  action: z.literal("increment_existing_variant"),
-  ...requiredProductFields,
-  quantity: z.number().int().min(1).max(9999),
-  variantId: z.string().uuid(),
-});
-
 export const analyzeBulkProductsSchema = z.object({
   input: z.string().trim().min(1).max(200_000),
 });
@@ -81,7 +74,6 @@ export const confirmBulkProductsSchema = z
           createProductSchema,
           createProductWithSaleDataSchema,
           createVariantSchema,
-          incrementVariantSchema,
         ]),
       )
       .min(1)
@@ -89,11 +81,7 @@ export const confirmBulkProductsSchema = z
   })
   .superRefine((value, context) => {
     value.items.forEach((item, index) => {
-      if (
-        item.action !== "increment_existing_variant" &&
-        !item.isKit &&
-        item.components.length > 0
-      ) {
+      if (!item.isKit && item.components.length > 0) {
         context.addIssue({
           code: z.ZodIssueCode.custom,
           message: "Componentes só podem ser associados a kits.",

@@ -2,7 +2,10 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
-import { parseBulkProducts } from "./parser";
+import {
+  normalizeBulkProductDisplayName,
+  parseBulkProducts,
+} from "./parser";
 
 const SYNTHETIC_LIST = `
 1. Lattafa Al Noble Safeer EDP 100 ml
@@ -191,6 +194,21 @@ const REAL_INLINE_LIST = readFileSync(
 );
 
 describe("parseBulkProducts", () => {
+  it("inclui o formato no nome sem duplicar o sufixo", () => {
+    expect(
+      normalizeBulkProductDisplayName(
+        "V.V. LOVE ETHEREAL MUSE BODY SPLASH",
+        "body_splash",
+      ),
+    ).toBe("V.V. LOVE ETHEREAL MUSE BODY SPLASH");
+    expect(
+      normalizeBulkProductDisplayName(
+        "BODY CREAM DELILAH BLANC",
+        "cosmetico",
+      ),
+    ).toBe("DELILAH BLANC BODY CREAM");
+  });
+
   it("padroniza nomes em maiúsculas e transforma apelidos entre aspas em sufixo", () => {
     const records = parseBulkProducts(`
       BODY SPLASH, BODY MIST E DESODORANTES
@@ -200,11 +218,11 @@ describe("parseBulkProducts", () => {
     `);
 
     expect(records.map((record) => record.name)).toEqual([
-      "ATHEERI - ABELHA",
+      "ATHEERI - ABELHA BODY SPLASH",
       "PISA LATTAFA PRIDE - TORRE DE PISA",
     ]);
     expect(records.map((record) => record.slug)).toEqual([
-      "atheeri-abelha",
+      "atheeri-abelha-body-splash",
       "pisa-lattafa-pride-torre-de-pisa",
     ]);
   });
@@ -330,6 +348,8 @@ describe("parseBulkProducts", () => {
     });
     expect(records[3]).toMatchObject({
       name: "KIT MAISON ALHAMBRA SALVO",
+      productType: "perfume",
+      categorySlug: "perfumes",
       components: [
         { type: "perfume", name: null, volumeMl: 100, quantity: 1 },
         {
@@ -372,6 +392,11 @@ describe("parseBulkProducts", () => {
       "cosmetico",
       "perfume",
     ]);
+    expect(records.map((record) => record.name)).toEqual([
+      "LATTAFA JASOOR BODY SPLASH",
+      "LATTAFA JASOOR BODY CREAM",
+      "LATTAFA JASOOR",
+    ]);
     expect(records.every((record) => record.duplicateOfIndex === undefined)).toBe(
       true,
     );
@@ -387,13 +412,13 @@ describe("parseBulkProducts", () => {
 
     expect(records).toHaveLength(2);
     expect(records[0]).toMatchObject({
-      name: "ATHEERI - ABELHA",
+      name: "ATHEERI - ABELHA BODY SPLASH",
       quantity: 6,
       productType: "body_splash",
       categorySlug: "perfumes",
     });
     expect(records[1]).toMatchObject({
-      name: "ROYAL AMBER",
+      name: "ROYAL AMBER BODY CREAM",
       quantity: 2,
       productType: "cosmetico",
       categorySlug: "cosmeticos",
@@ -528,7 +553,7 @@ describe("parseBulkProducts", () => {
 
     expect(records).toHaveLength(3);
     expect(records[0]).toMatchObject({
-      name: "ATHEERI - ABELHA",
+      name: "ATHEERI - ABELHA BODY SPLASH",
       quantity: 6,
       productType: "body_splash",
       categorySlug: "perfumes",
@@ -545,6 +570,78 @@ describe("parseBulkProducts", () => {
       variations: ["Yara Tous", "Yara Candy", "Yara Rosa", "Yara Moi"],
       issues: ["shared_quantity_between_variations"],
     });
+  });
+
+  it("interpreta todos os metadados separados por ponto e vírgula", () => {
+    const records = parseBulkProducts(`
+      1. BODY SPLASH ATHEERI “ABELHA”; Quantidade: 6 unidades; Marca: Isabelle La Belle; Gênero: feminino; Volume: 300 ml
+      2. KIT DE MINIATURAS LATTAFA PRIDE FEMININO; Quantidade: 1 kit; Marca: Lattafa Pride; Gênero: feminino; Volume: 5 x 20 ml
+      3. MAYAR LATTAFA, 100 ML; Quantidade: 10 unidades; Marca: Lattafa; Gênero: feminino; Volume: 100 ml
+    `);
+
+    expect(records).toHaveLength(3);
+    expect(records[0]).toMatchObject({
+      name: "ATHEERI - ABELHA BODY SPLASH",
+      brand: "Isabelle La Belle",
+      gender: "feminino",
+      quantity: 6,
+      volumeMl: 300,
+      productType: "body_splash",
+      categorySlug: "perfumes",
+    });
+    expect(records[1]).toMatchObject({
+      name: "KIT DE MINIATURAS LATTAFA PRIDE FEMININO",
+      brand: "Lattafa Pride",
+      gender: "feminino",
+      quantity: 1,
+      isKit: true,
+      productType: "perfume",
+    });
+    expect(records[2]).toMatchObject({
+      name: "MAYAR LATTAFA",
+      brand: "Lattafa",
+      gender: "feminino",
+      quantity: 10,
+      volumeMl: 100,
+      productType: "perfume",
+      categorySlug: "perfumes",
+    });
+  });
+
+  it("vincula metadados nas linhas seguintes sem criar produtos falsos", () => {
+    const records = parseBulkProducts(`
+      LATTAFA AL NOBLE SAFEER EDP 100 ML
+      Quantidade: 1 unidade
+      Marca: Lattafa
+      Gênero: unissex
+      Volume: 100 ml
+
+      ASAD BOURBON LATTAFA EDP 100 ML
+      Marca: Lattafa
+      Volume: 100 ml
+      Quantidade: 5 unidades
+      Gênero: masculino
+    `);
+
+    expect(records).toHaveLength(2);
+    expect(records[0]).toMatchObject({
+      name: "LATTAFA AL NOBLE SAFEER",
+      brand: "Lattafa",
+      gender: "unissex",
+      quantity: 1,
+      volumeMl: 100,
+      productType: "perfume",
+    });
+    expect(records[1]).toMatchObject({
+      name: "ASAD BOURBON LATTAFA",
+      brand: "Lattafa",
+      gender: "masculino",
+      quantity: 5,
+      volumeMl: 100,
+    });
+    expect(records.some((record) => record.name.startsWith("MARCA"))).toBe(
+      false,
+    );
   });
 
   it("não confunde produtos em caixa alta com cabeçalhos", () => {

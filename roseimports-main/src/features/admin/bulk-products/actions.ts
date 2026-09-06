@@ -9,11 +9,12 @@ import {
   analyzeBulkProductRecords,
   findCatalogDuplicateIndexes,
   findRepeatedImportIndexes,
-  normalizeIdentity,
-  removeBrandFromIdentity,
   type BulkProductAnalysis,
-  type CatalogProductCandidate,
 } from "./dedupe";
+import {
+  mapCatalogCandidates,
+  type CatalogProductRow,
+} from "./catalog-candidates";
 import { loadCatalogWithLegacyFallback } from "./catalog-loader";
 import { translateBulkImportError } from "./error-messages";
 import {
@@ -22,42 +23,13 @@ import {
   type BulkProductImportSummary,
 } from "./import-service";
 import {
-  normalizeProductIdentityFromDescription,
   parseBulkProducts,
-  type BulkProductConcentration,
 } from "./parser";
 import {
   analyzeBulkProductsSchema,
   confirmBulkProductsSchema,
   type ConfirmBulkProductsInput,
 } from "./schemas";
-
-type CatalogKitItemRow = {
-  component_type: string;
-  component_name: string | null;
-  volume_ml: number | null;
-  component_quantity: number | null;
-  sort_order: number;
-};
-
-type CatalogVariantRow = {
-  id: string;
-  label: string;
-  volume_ml: number | null;
-  variant_type: "full" | "decant";
-  concentration?: BulkProductConcentration | null;
-  is_kit?: boolean;
-  product_variant_kit_items?: CatalogKitItemRow[];
-};
-
-type CatalogProductRow = {
-  id: string;
-  name: string;
-  slug: string;
-  brand: string | null;
-  product_type: NonNullable<BulkProductAnalysis["productType"]>;
-  product_variants: CatalogVariantRow[];
-};
 
 type CategoryRow = {
   id: string;
@@ -234,13 +206,14 @@ export async function confirmBulkProducts(
   }
 
   const supabase = await createClient();
-  const productsToCreate = parsed.data.items.filter(
+  const catalogCreations = parsed.data.items.filter(
     (item) =>
       item.action === "create_inactive_product" ||
-      item.action === "create_product_with_sale_data",
+      item.action === "create_product_with_sale_data" ||
+      item.action === "create_inactive_variant",
   );
 
-  if (productsToCreate.length > 0) {
+  if (catalogCreations.length > 0) {
     const catalogResult = await loadCatalogForDuplicateCheck(supabase);
 
     if (catalogResult.error) {
@@ -254,20 +227,20 @@ export async function confirmBulkProducts(
     const duplicateIndexes = [
       ...new Set([
         ...findCatalogDuplicateIndexes(
-          productsToCreate,
+          catalogCreations,
           mapCatalogCandidates(catalogResult.data ?? []),
         ),
-        ...findRepeatedImportIndexes(productsToCreate),
+        ...findRepeatedImportIndexes(catalogCreations),
       ]),
     ];
 
     if (duplicateIndexes.length > 0) {
       const duplicateNames = duplicateIndexes.map(
-        (index) => productsToCreate[index]?.name ?? `Item ${index + 1}`,
+        (index) => catalogCreations[index]?.name ?? `Item ${index + 1}`,
       );
       return {
         ok: false,
-        error: `${duplicateNames.length === 1 ? "Este produto já existe" : "Estes produtos já existem"} no catálogo: ${duplicateNames.join(", ")}. Analise o lote novamente para descartá-${duplicateNames.length === 1 ? "lo" : "los"} automaticamente. Nenhuma alteração foi feita.`,
+        error: `${duplicateNames.length === 1 ? "Este produto ou versão já existe" : "Estes produtos ou versões já existem"} no catálogo: ${duplicateNames.join(", ")}. Analise o lote novamente para usar o registro existente. Nenhuma alteração foi feita.`,
       };
     }
   }
@@ -357,47 +330,6 @@ async function loadCatalogForDuplicateCheck(
       };
     },
   );
-}
-
-function mapCatalogCandidates(rows: CatalogProductRow[]): CatalogProductCandidate[] {
-  return rows.map((product) => {
-    const normalizedName = normalizeProductIdentityFromDescription(product.name);
-    const normalizedBrand = normalizeIdentity(product.brand ?? "");
-
-    return {
-      productId: product.id,
-      name: product.name,
-      normalizedName,
-      normalizedCoreName: removeBrandFromIdentity(normalizedName, normalizedBrand),
-      brand: product.brand,
-      normalizedBrand,
-      productType: product.product_type,
-      variants: product.product_variants.map((variant) => ({
-        variantId: variant.id,
-        label: variant.label,
-        concentration:
-          variant.concentration ?? inferConcentration(`${product.name} ${variant.label}`),
-        volumeMl: variant.volume_ml,
-        variantType: variant.variant_type,
-        isKit: Boolean(variant.is_kit) || /^kits?\b/i.test(product.name),
-        components: [...(variant.product_variant_kit_items ?? [])]
-          .sort((left, right) => left.sort_order - right.sort_order)
-          .map((component) => ({
-            type: component.component_type,
-            name: component.component_name,
-            volumeMl: component.volume_ml,
-            quantity: component.component_quantity,
-          })),
-      })),
-    };
-  });
-}
-
-function inferConcentration(value: string): BulkProductConcentration | null {
-  if (/\b(?:EDP|EAU\s+DE\s+PARFUM)\b/i.test(value)) return "EDP";
-  if (/\bEDT\b/i.test(value)) return "EDT";
-  if (/\bPARFUM\b/i.test(value)) return "Parfum";
-  return null;
 }
 
 function resolveCategoryId(

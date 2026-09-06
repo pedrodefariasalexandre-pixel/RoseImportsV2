@@ -45,7 +45,7 @@ describe("analyzeBulkProductRecords", () => {
 
     expect(analysis).toMatchObject({
       status: "existing_product",
-      proposedAction: "increment_existing_variant",
+      proposedAction: null,
       matchedProductId: "10000000-0000-4000-8000-000000000001",
       matchedVariantId: "20000000-0000-4000-8000-000000000001",
     });
@@ -59,7 +59,7 @@ describe("analyzeBulkProductRecords", () => {
 
     expect(analysis).toMatchObject({
       status: "existing_product",
-      proposedAction: "increment_existing_variant",
+      proposedAction: null,
     });
   });
 
@@ -177,11 +177,211 @@ describe("analyzeBulkProductRecords", () => {
 
     expect(analysis).toMatchObject({
       status: "existing_product",
-      proposedAction: "increment_existing_variant",
+      proposedAction: null,
       matchedProductId: "10000000-0000-4000-8000-000000000001",
       matchedVariantId: "20000000-0000-4000-8000-000000000001",
     });
   });
+
+  it("descarta kit legado sem volume ou composição estruturada", () => {
+    const parsed = parseBulkProducts(
+      "KIT ARMAF CLUB DE NUIT ICONIC, perfume 105 ml + miniatura 30 ml, Masculino\nQuantidade: 1 kit",
+    );
+    const [analysis] = analyzeBulkProductRecords(parsed, [
+      candidate({
+        name: "KIT ARMAF CLUB DE NUIT ICONIC",
+        normalizedName: "kit armaf club de nuit iconic",
+        normalizedCoreName: "kit club de nuit iconic",
+        brand: "Armaf",
+        normalizedBrand: "armaf",
+        variants: [
+          {
+            variantId: "20000000-0000-4000-8000-000000000011",
+            label: "Kit",
+            concentration: null,
+            volumeMl: null,
+            variantType: "full",
+            isKit: true,
+            components: [],
+          },
+        ],
+      }),
+    ]);
+
+    expect(analysis).toMatchObject({
+      status: "existing_product",
+      proposedAction: null,
+      matchedVariantId: "20000000-0000-4000-8000-000000000011",
+    });
+  });
+
+  it.each([
+    {
+      input:
+        "LATTAFA PRIDE KIDS HAPPY BRUSH EDP 75 ML, Unissex\nQuantidade: 1",
+      catalogName: "IMPORTS LATTAFA PRIDE KIDS HAPPY BRUSH",
+      normalizedName: "imports lattafa pride kids happy brush",
+      normalizedCoreName: "imports kids happy brush",
+      brand: "Lattafa Pride",
+      normalizedBrand: "lattafa pride",
+      volumeMl: 75,
+    },
+    {
+      input:
+        "RASASI HAWAS FOR HIM KOBRA EDP 100 ML, Masculino\nQuantidade: 1",
+      catalogName: "Hawas Kobra For Him – 100 ml",
+      normalizedName: "hawas kobra for him",
+      normalizedCoreName: "hawas kobra for him",
+      brand: "Rasasi",
+      normalizedBrand: "rasasi",
+      volumeMl: 100,
+    },
+  ])(
+    "descarta $catalogName apesar de ruído ou ordem diferente das palavras",
+    ({
+      input,
+      catalogName,
+      normalizedName,
+      normalizedCoreName,
+      brand,
+      normalizedBrand,
+      volumeMl,
+    }) => {
+      const [analysis] = analyzeBulkProductRecords(parseBulkProducts(input), [
+        candidate({
+          name: catalogName,
+          normalizedName,
+          normalizedCoreName,
+          brand,
+          normalizedBrand,
+          variants: [
+            {
+              variantId: "20000000-0000-4000-8000-000000000012",
+              label: `${volumeMl} ml`,
+              concentration: null,
+              volumeMl,
+              variantType: "full",
+              isKit: false,
+              components: [],
+            },
+          ],
+        }),
+      ]);
+
+      expect(analysis).toMatchObject({
+        status: "existing_product",
+        proposedAction: null,
+        matchedVariantId: "20000000-0000-4000-8000-000000000012",
+      });
+    },
+  );
+
+  it("não sinaliza kit como semelhante ao perfume individual no limite de 80%", () => {
+    const parsed = parseBulkProducts(
+      "Kit Lattafa Fakhar Rose, perfume 100 ml + loção corporal 200 ml, Feminino\nQuantidade: 1 kit",
+    );
+    const [analysis] = analyzeBulkProductRecords(parsed, [
+      candidate({
+        name: "Lattafa Fakhar Rose",
+        normalizedName: "lattafa fakhar rose",
+        normalizedCoreName: "fakhar rose",
+      }),
+    ]);
+
+    expect(analysis).toMatchObject({
+      status: "new_product",
+      proposedAction: "create_inactive_product",
+      isKit: true,
+    });
+  });
+
+  it("nunca libera Afeef legado como novo quando falta BODY SPLASH na entrada", () => {
+    const parsed = parseBulkProducts(
+      "AFEEF LA BELLE ISABELLE, 250 ML; Quantidade: 5 unidades; Marca: Isabelle La Belle; Gênero: feminino; Volume: 250 ml",
+    );
+    const [analysis] = analyzeBulkProductRecords(parsed, [
+      candidate({
+        productId: "10000000-0000-4000-8000-000000000008",
+        name: "AFEEF LA BELLE ISABELLE 250 ML",
+        normalizedName: "afeef la belle isabelle body splash",
+        normalizedCoreName: "afeef la belle isabelle body splash",
+        brand: "Isabelle La Belle",
+        normalizedBrand: "isabelle la belle",
+        productType: "body_splash",
+        variants: [
+          {
+            variantId: "20000000-0000-4000-8000-000000000008",
+            label: "250",
+            concentration: null,
+            volumeMl: 250,
+            variantType: "full",
+            isKit: false,
+            components: [],
+          },
+        ],
+      }),
+    ]);
+
+    expect(analysis).toMatchObject({
+      status: "possible_duplicate",
+      proposedAction: null,
+    });
+    expect(analysis?.candidates[0]?.productName).toBe(
+      "AFEEF LA BELLE ISABELLE 250 ML",
+    );
+  });
+
+  it.each([
+    {
+      input:
+        "AFEEF LA BELLE ISABELLE BODY SPLASH, 250 ML; Quantidade: 5 unidades; Marca: Isabelle La Belle; Gênero: feminino; Volume: 250 ml",
+      catalogName: "AFEEF LA BELLE ISABELLE 250 ML",
+      normalizedName: "afeef la belle isabelle body splash",
+      brand: "Isabelle La Belle",
+      normalizedBrand: "isabelle la belle",
+    },
+    {
+      input:
+        "V.V. LOVE ETHEREAL MUSE BODY SPLASH, 250 ML; Quantidade: 1 unidade; Marca: V.V. Love; Gênero: feminino; Volume: 250 ml",
+      catalogName: "V.V. LOVE ETHEREAL MUSE 250 ML",
+      normalizedName: "v v love ethereal muse body splash",
+      brand: "Fragrance Mist",
+      normalizedBrand: "fragrance mist",
+    },
+  ])(
+    "vincula $catalogName ao item existente mesmo com metadado legado inconsistente",
+    ({ input, catalogName, normalizedName, brand, normalizedBrand }) => {
+      const [analysis] = analyzeBulkProductRecords(parseBulkProducts(input), [
+        candidate({
+          productId: "10000000-0000-4000-8000-000000000009",
+          name: catalogName,
+          normalizedName,
+          normalizedCoreName: normalizedName,
+          brand,
+          normalizedBrand,
+          productType: "body_splash",
+          variants: [
+            {
+              variantId: "20000000-0000-4000-8000-000000000009",
+              label: "250",
+              concentration: null,
+              volumeMl: 250,
+              variantType: "full",
+              isKit: false,
+              components: [],
+            },
+          ],
+        }),
+      ]);
+
+      expect(analysis).toMatchObject({
+        status: "existing_product",
+      proposedAction: null,
+        matchedProductId: "10000000-0000-4000-8000-000000000009",
+        matchedVariantId: "20000000-0000-4000-8000-000000000009",
+      });
+    },
+  );
 
   it.each([
     {
@@ -229,7 +429,7 @@ describe("analyzeBulkProductRecords", () => {
 
       expect(analysis).toMatchObject({
         status: "existing_product",
-        proposedAction: "increment_existing_variant",
+      proposedAction: null,
         matchedVariantId: "20000000-0000-4000-8000-000000000007",
       });
     },
@@ -285,6 +485,159 @@ describe("analyzeBulkProductRecords", () => {
     expect(indexes).toEqual([0]);
   });
 
+  it("repete na confirmação a proteção para ordem, ruído e kit legado", () => {
+    const indexes = findCatalogDuplicateIndexes(
+      [
+        {
+          name: "RASASI HAWAS FOR HIM KOBRA",
+          brand: "Rasasi",
+          productType: "perfume",
+          concentration: "EDP",
+          volumeMl: 100,
+          variantType: "full",
+          isKit: false,
+          components: [],
+        },
+        {
+          name: "LATTAFA PRIDE KIDS HAPPY BRUSH",
+          brand: "Lattafa Pride",
+          productType: "perfume",
+          concentration: "EDP",
+          volumeMl: 75,
+          variantType: "full",
+          isKit: false,
+          components: [],
+        },
+        {
+          name: "KIT ARMAF CLUB DE NUIT ICONIC",
+          brand: "Armaf",
+          productType: "perfume",
+          concentration: null,
+          volumeMl: 105,
+          variantType: "full",
+          isKit: true,
+          components: [
+            {
+              type: "perfume",
+              name: "Club de Nuit Iconic",
+              volumeMl: 105,
+              quantity: 1,
+            },
+          ],
+        },
+      ],
+      [
+        candidate({
+          name: "Hawas Kobra For Him – 100 ml",
+          normalizedName: "hawas kobra for him",
+          normalizedCoreName: "hawas kobra for him",
+          brand: "Rasasi",
+          normalizedBrand: "rasasi",
+        }),
+        candidate({
+          name: "IMPORTS LATTAFA PRIDE KIDS HAPPY BRUSH",
+          normalizedName: "imports lattafa pride kids happy brush",
+          normalizedCoreName: "imports kids happy brush",
+          brand: "Lattafa Pride",
+          normalizedBrand: "lattafa pride",
+          variants: [
+            {
+              variantId: "20000000-0000-4000-8000-000000000013",
+              label: "75 ml",
+              concentration: null,
+              volumeMl: 75,
+              variantType: "full",
+              isKit: false,
+              components: [],
+            },
+          ],
+        }),
+        candidate({
+          name: "KIT ARMAF CLUB DE NUIT ICONIC",
+          normalizedName: "kit armaf club de nuit iconic",
+          normalizedCoreName: "kit club de nuit iconic",
+          brand: "Armaf",
+          normalizedBrand: "armaf",
+          variants: [
+            {
+              variantId: "20000000-0000-4000-8000-000000000014",
+              label: "Kit",
+              concentration: null,
+              volumeMl: null,
+              variantType: "full",
+              isKit: true,
+              components: [],
+            },
+          ],
+        }),
+      ],
+    );
+
+    expect(indexes).toEqual([0, 1, 2]);
+  });
+
+  it("bloqueia a criação de Afeef e Ethereal Muse apesar dos metadados legados", () => {
+    const variants = [
+      {
+        variantId: "20000000-0000-4000-8000-000000000010",
+        label: "250",
+        concentration: null,
+        volumeMl: 250,
+        variantType: "full" as const,
+        isKit: false,
+        components: [],
+      },
+    ];
+    const catalog = [
+      candidate({
+        name: "AFEEF LA BELLE ISABELLE 250 ML",
+        normalizedName: "afeef la belle isabelle body splash",
+        normalizedCoreName: "afeef la belle isabelle body splash",
+        brand: "Isabelle La Belle",
+        normalizedBrand: "isabelle la belle",
+        productType: "body_splash",
+        variants,
+      }),
+      candidate({
+        name: "V.V. LOVE ETHEREAL MUSE 250 ML",
+        normalizedName: "v v love ethereal muse body splash",
+        normalizedCoreName: "v v love ethereal muse body splash",
+        brand: "Fragrance Mist",
+        normalizedBrand: "fragrance mist",
+        productType: "body_splash",
+        variants,
+      }),
+    ];
+
+    expect(
+      findCatalogDuplicateIndexes(
+        [
+          {
+            name: "AFEEF LA BELLE ISABELLE",
+            brand: "Isabelle La Belle",
+            productType: "perfume",
+            concentration: null,
+            volumeMl: 250,
+            variantType: "full",
+            isKit: false,
+            components: [],
+          },
+          {
+            name: "V.V. LOVE ETHEREAL MUSE BODY SPLASH",
+            brand: "V.V. Love",
+            productType: "body_splash",
+            concentration: null,
+            volumeMl: 250,
+            variantType: "full",
+            isKit: false,
+            components: [],
+          },
+        ],
+        catalog,
+      ),
+    ).toEqual([0, 1]);
+  });
+
   it("descarta quando o próprio catálogo já contém mais de uma ficha equivalente", () => {
     const parsed = parseBulkProducts(
       "LATTAFA HAYAATI AL MALEKY EDP 100 ML\nQuantidade: 2",
@@ -325,7 +678,7 @@ describe("analyzeBulkProductRecords", () => {
 
     expect(analysis).toMatchObject({
       status: "existing_product",
-      proposedAction: "increment_existing_variant",
+      proposedAction: null,
     });
     expect(analysis?.candidates).toHaveLength(2);
   });

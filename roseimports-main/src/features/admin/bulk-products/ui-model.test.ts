@@ -12,7 +12,7 @@ import {
 } from "./ui-model";
 
 function analysis(
-  overrides: Partial<BulkProductAnalysis> = {},
+  overrides: Partial<BulkProductAnalysis & { categoryId: string | null }> = {},
 ): BulkProductAnalysis & { categoryId: string | null } {
   return {
     source: "Lattafa Jasoor EDP 100 ml",
@@ -52,12 +52,12 @@ const categoryIds = {
 };
 
 describe("modelo da revisão do cadastro em lote", () => {
-  it("prepara produtos novos por R$ 300 e descarta duplicidades exatas", () => {
+  it("prepara produtos novos e ignora duplicidades completas automaticamente", () => {
     const items = createEditableItems([
       analysis(),
       analysis({
         status: "existing_product",
-        proposedAction: "increment_existing_variant",
+        proposedAction: null,
         matchedVariantId: "20000000-0000-4000-8000-000000000001",
       }),
       analysis({
@@ -92,17 +92,16 @@ describe("modelo da revisão do cadastro em lote", () => {
     expect(item).toBeDefined();
     expect(isItemConfirmable(item!, categoryIds)).toBe(false);
 
-    const reviewed: EditableBulkProduct = {
+    const resolved: EditableBulkProduct = {
       ...item!,
       name: "Yara Tous",
       quantity: 4,
-      reviewed: true,
       selected: true,
       decision: { type: "create_product_with_sale_data" },
       priceCents: 30_000,
       availableForSale: true,
     };
-    expect(isItemConfirmable(reviewed, categoryIds)).toBe(true);
+    expect(isItemConfirmable(resolved, categoryIds)).toBe(true);
   });
 
   it("converte decisões explícitas no payload transacional", () => {
@@ -110,7 +109,7 @@ describe("modelo da revisão do cadastro em lote", () => {
       analysis(),
       analysis({
         status: "existing_product",
-        proposedAction: "increment_existing_variant",
+        proposedAction: null,
         matchedVariantId: "20000000-0000-4000-8000-000000000001",
       }),
     ]);
@@ -129,35 +128,34 @@ describe("modelo da revisão do cadastro em lote", () => {
       priceCents: 30_000,
       availableForSale: true,
     });
+    expect(payload).not.toContainEqual(
+      expect.objectContaining({ action: "increment_existing_variant" }),
+    );
   });
 
-  it("permite resolver possível duplicidade usando variante escolhida", () => {
+  it("não exige campos nem gera payload para duplicidade completa", () => {
     const [item] = createEditableItems([
-      analysis({ status: "possible_duplicate", proposedAction: null }),
+      analysis({
+        brand: null,
+        categorySlug: null,
+        productType: null,
+        gender: null,
+        volumeMl: null,
+        status: "existing_product",
+        proposedAction: null,
+        matchedProductId: "10000000-0000-4000-8000-000000000001",
+        matchedVariantId: "20000000-0000-4000-8000-000000000001",
+      }),
     ]);
-    const resolved: EditableBulkProduct = {
-      ...item!,
-      reviewed: true,
-      selected: true,
-      decision: {
-        type: "increment_variant",
-        variantId: "20000000-0000-4000-8000-000000000009",
-      },
-    };
 
-    expect(isItemConfirmable(resolved, categoryIds)).toBe(true);
-    expect(buildConfirmItems([resolved], categoryIds)).toEqual([
-      {
-        action: "increment_existing_variant",
-        quantity: 2,
-        variantId: "20000000-0000-4000-8000-000000000009",
-        name: "LATTAFA JASOOR",
-        brand: "Lattafa",
-        categoryId: categoryIds.perfumes,
-        productType: "perfume",
-        gender: "masculino",
-      },
-    ]);
+    expect(item).toMatchObject({
+      selected: false,
+      decision: { type: "skip" },
+    });
+    expect(getItemConfirmationBlockers(item!, categoryIds)).toContain(
+      "item_skipped",
+    );
+    expect(buildConfirmItems([item!], categoryIds)).toEqual([]);
   });
 
   it("bloqueia confirmação quando qualquer campo obrigatório está ausente", () => {
@@ -196,7 +194,7 @@ describe("modelo da revisão do cadastro em lote", () => {
         },
         categoryIds,
       ),
-    ).toEqual(["brand_missing", "gender_missing", "manual_review_required"]);
+    ).toEqual(["brand_missing", "gender_missing"]);
     expect(item?.quickFixFields).toEqual(["brand", "gender"]);
   });
 
@@ -269,13 +267,14 @@ describe("modelo da revisão do cadastro em lote", () => {
     });
   });
 
-  it("normaliza em maiúsculas o nome enviado em qualquer decisão", () => {
+  it("normaliza em maiúsculas o nome enviado ao criar variante", () => {
     const [item] = createEditableItems([
       analysis({
         name: "Lattafa Jasoor",
         status: "existing_product",
-        proposedAction: "increment_existing_variant",
-        matchedVariantId: "20000000-0000-4000-8000-000000000001",
+        proposedAction: "create_inactive_variant",
+        matchedProductId: "10000000-0000-4000-8000-000000000001",
+        matchedVariantId: null,
       }),
     ]);
 
@@ -283,8 +282,8 @@ describe("modelo da revisão do cadastro em lote", () => {
       ...item!,
       selected: true,
       decision: {
-        type: "increment_variant" as const,
-        variantId: "20000000-0000-4000-8000-000000000001",
+        type: "create_variant" as const,
+        productId: "10000000-0000-4000-8000-000000000001",
       },
     };
 
@@ -362,8 +361,41 @@ describe("modelo da revisão do cadastro em lote", () => {
 
     expect(item).toMatchObject({
       selected: false,
-      reviewed: true,
       decision: { type: "skip" },
+    });
+  });
+
+  it("impõe BODY SPLASH e BODY CREAM no nome antes da confirmação", () => {
+    const [bodySplash, bodyCream] = createEditableItems([
+      analysis({
+        source: "V.V. LOVE ETHEREAL MUSE, 250 ML",
+        name: "V.V. LOVE ETHEREAL MUSE",
+        brand: "V.V. Love",
+        productType: "body_splash",
+        volumeMl: 250,
+      }),
+      analysis({
+        source: "BODY CREAM DELILAH BLANC, 200 ML",
+        sourceLine: 2,
+        name: "DELILAH BLANC",
+        brand: "Isabelle La Belle",
+        productType: "cosmetico",
+        categorySlug: "cosmeticos",
+        categoryId: categoryIds.cosmeticos,
+        volumeMl: 200,
+      }),
+    ]);
+
+    const payload = buildConfirmItems([bodySplash!, bodyCream!], categoryIds);
+    expect(payload[0]).toMatchObject({
+      name: "V.V. LOVE ETHEREAL MUSE BODY SPLASH",
+      slug: "v-v-love-ethereal-muse-body-splash",
+      productType: "body_splash",
+    });
+    expect(payload[1]).toMatchObject({
+      name: "DELILAH BLANC BODY CREAM",
+      slug: "delilah-blanc-body-cream",
+      productType: "cosmetico",
     });
   });
 
@@ -375,7 +407,6 @@ describe("modelo da revisão do cadastro em lote", () => {
       ...initial!,
       gender: "masculino",
       description: "Texto revisado pela administradora.",
-      reviewed: true,
       selected: true,
       decision: { type: "create_product_with_sale_data" },
       priceCents: 30_000,
@@ -385,7 +416,7 @@ describe("modelo da revisão do cadastro em lote", () => {
     const [reanalyzed] = mergeReanalyzedItems([edited], [
       analysis({
         status: "existing_product",
-        proposedAction: "increment_existing_variant",
+        proposedAction: null,
         matchedProductId: "10000000-0000-4000-8000-000000000001",
         matchedVariantId: "20000000-0000-4000-8000-000000000001",
       }),
@@ -395,10 +426,36 @@ describe("modelo da revisão do cadastro em lote", () => {
       gender: "masculino",
       description: "Texto revisado pela administradora.",
       selected: false,
-      reviewed: true,
       decision: { type: "skip" },
       status: "existing_product",
     });
+  });
+
+  it("não reaproveita dados do lote anterior quando a linha de origem mudou", () => {
+    const [initial] = createEditableItems([
+      analysis({ source: "PRODUTO ANTIGO", name: "PRODUTO ANTIGO" }),
+    ]);
+    const edited: EditableBulkProduct = {
+      ...initial!,
+      name: "EDIÇÃO QUE NÃO PODE VAZAR",
+      quantity: 99,
+      selected: true,
+    };
+
+    const [reanalyzed] = mergeReanalyzedItems([edited], [
+      analysis({
+        source: "PRODUTO NOVO",
+        name: "PRODUTO NOVO",
+        quantity: 1,
+      }),
+    ]);
+
+    expect(reanalyzed).toMatchObject({
+      source: "PRODUTO NOVO",
+      name: "PRODUTO NOVO",
+      quantity: 1,
+    });
+    expect(reanalyzed?.name).not.toBe("EDIÇÃO QUE NÃO PODE VAZAR");
   });
 
   it("duplica agrupamento para permitir distribuição manual sem confirmá-lo", () => {
@@ -413,7 +470,6 @@ describe("modelo da revisão do cadastro em lote", () => {
 
     expect(duplicate.clientId).toBe("manual-copy");
     expect(duplicate.selected).toBe(false);
-    expect(duplicate.reviewed).toBe(false);
     expect(duplicate.decision).toEqual({ type: "review" });
   });
 });

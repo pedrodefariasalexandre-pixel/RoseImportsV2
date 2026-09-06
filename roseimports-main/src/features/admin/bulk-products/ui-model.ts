@@ -1,8 +1,11 @@
 import { slugify } from "../../../lib/slug";
 import { normalizeProductName } from "../../../lib/product-name";
-import { buildBulkVariantLabel } from "./parser";
+import {
+  buildBulkVariantLabel,
+  normalizeBulkProductDisplayName,
+} from "./parser";
 import type { BulkProductAnalysis } from "./dedupe";
-import type { ConfirmBulkProductImportItem } from "./import-service";
+import type { BulkProductCreationImportItem } from "./import-service";
 
 export type BulkCategoryIds = {
   perfumes: string | null;
@@ -16,8 +19,7 @@ export type BulkProductDecision =
   | { type: "skip" }
   | { type: "create_product" }
   | { type: "create_product_with_sale_data" }
-  | { type: "create_variant"; productId: string }
-  | { type: "increment_variant"; variantId: string };
+  | { type: "create_variant"; productId: string };
 
 export type BulkProductQuickFixField =
   | "name"
@@ -33,7 +35,6 @@ export type EditableBulkProduct = BulkProductAnalysis & {
   clientId: string;
   originalName: string;
   selected: boolean;
-  reviewed: boolean;
   decision: BulkProductDecision;
   olfactoryFamilyId: string | null;
   description: string;
@@ -55,13 +56,11 @@ export type BulkProductConfirmationBlocker =
   | "gender_missing"
   | "volume_missing"
   | "quantity_invalid"
-  | "manual_review_required"
   | "category_unavailable"
   | "price_missing"
   | "sale_data_required"
   | "sale_availability_required"
-  | "product_target_missing"
-  | "variant_target_missing";
+  | "product_target_missing";
 
 type AnalysisInput = BulkProductAnalysis & { categoryId: string | null };
 
@@ -69,16 +68,12 @@ export function createEditableItems(items: AnalysisInput[]): EditableBulkProduct
   return items.map((item, index) => {
     const decision = initialDecision(item);
     const actionable = decision.type !== "review" && decision.type !== "skip";
-    const automaticallyDiscarded = decision.type === "skip";
 
     return {
       ...item,
       clientId: `${item.sourceLine}-${index}`,
       originalName: item.name,
       selected: actionable,
-      reviewed:
-        automaticallyDiscarded ||
-        (item.status !== "possible_duplicate" && item.status !== "incomplete"),
       decision,
       olfactoryFamilyId: null,
       description: "",
@@ -126,7 +121,7 @@ export function mergeReanalyzedItems(
 
   return createEditableItems(analyzedItems).map((reanalyzed) => {
     const current = currentByClientId.get(reanalyzed.clientId);
-    if (!current) return reanalyzed;
+    if (!current || current.source !== reanalyzed.source) return reanalyzed;
 
     const preservedEdits = {
       name: current.name,
@@ -148,12 +143,19 @@ export function mergeReanalyzedItems(
       promotional: current.promotional,
     };
 
+    if (reanalyzed.status === "existing_product") {
+      return {
+        ...reanalyzed,
+        ...preservedEdits,
+        selected: reanalyzed.decision.type !== "skip",
+      };
+    }
+
     if (reanalyzed.decision.type === "skip") {
       return {
         ...reanalyzed,
         ...preservedEdits,
         selected: false,
-        reviewed: true,
       };
     }
 
@@ -161,7 +163,6 @@ export function mergeReanalyzedItems(
       ...reanalyzed,
       ...preservedEdits,
       selected: current.selected,
-      reviewed: current.reviewed,
       decision: current.decision,
       priceCents:
         current.decision.type === "create_product_with_sale_data"
@@ -184,7 +185,6 @@ export function duplicateEditableItem(
     clientId,
     originalName: item.name,
     selected: false,
-    reviewed: false,
     decision: { type: "review" },
   };
 }
@@ -222,14 +222,6 @@ export function getItemConfirmationBlockers(
     blockers.push("quantity_invalid");
   }
   if (
-    (item.status === "possible_duplicate" ||
-      item.status === "incomplete" ||
-      item.status === "error") &&
-    !item.reviewed
-  ) {
-    blockers.push("manual_review_required");
-  }
-  if (
     item.categorySlug &&
     resolveCategoryId(item.categorySlug, categoryIds) === null
   ) {
@@ -254,20 +246,13 @@ export function getItemConfirmationBlockers(
   ) {
     blockers.push("product_target_missing");
   }
-  if (
-    item.decision.type === "increment_variant" &&
-    item.decision.variantId.length === 0
-  ) {
-    blockers.push("variant_target_missing");
-  }
-
   return blockers;
 }
 
 export function buildConfirmItems(
   items: EditableBulkProduct[],
   categoryIds: BulkCategoryIds,
-): ConfirmBulkProductImportItem[] {
+): BulkProductCreationImportItem[] {
   const selected = items.filter(
     (item) => item.selected && item.decision.type !== "skip",
   );
@@ -286,7 +271,12 @@ export function buildConfirmItems(
     const categoryId = resolveCategoryId(item.categorySlug, categoryIds);
     if (!categoryId) throw new Error("missing_bulk_product_category");
 
-    const normalizedName = normalizeProductName(item.name);
+    const plainNormalizedName = normalizeProductName(item.name);
+    const normalizedName = normalizeBulkProductDisplayName(
+      item.name,
+      item.productType,
+      item.source,
+    );
     const requiredProductFields = {
       name: normalizedName,
       brand: item.brand.trim(),
@@ -294,15 +284,6 @@ export function buildConfirmItems(
       productType: item.productType,
       gender: item.gender,
     };
-
-    if (item.decision.type === "increment_variant") {
-      return {
-        action: "increment_existing_variant",
-        quantity: item.quantity,
-        variantId: item.decision.variantId,
-        ...requiredProductFields,
-      };
-    }
 
     const variantLabel = buildBulkVariantLabel({
       volumeMl: item.volumeMl,
@@ -345,7 +326,9 @@ export function buildConfirmItems(
     }
 
     const baseSlug =
-      item.name === item.originalName ? item.slug : slugify(normalizedName);
+      item.name === item.originalName && normalizedName === plainNormalizedName
+        ? item.slug
+        : slugify(normalizedName);
     const slug = reserveSlug(baseSlug, usedSlugs);
 
     if (item.decision.type === "create_product_with_sale_data") {
@@ -376,7 +359,7 @@ export function buildConfirmItems(
 
 function initialDecision(item: AnalysisInput): BulkProductDecision {
   if (
-    item.proposedAction === "increment_existing_variant" &&
+    item.status === "existing_product" &&
     item.matchedVariantId
   ) {
     return { type: "skip" };

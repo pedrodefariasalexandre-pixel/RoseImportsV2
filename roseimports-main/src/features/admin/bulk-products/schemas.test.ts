@@ -97,4 +97,19 @@ describe("schema de confirmação do cadastro em lote", () => {
       ).toBe(false);
     },
   );
+
+  it("rejeita qualquer tentativa de alimentar estoque existente por este fluxo", () => {
+    const parsed = confirmBulkProductsSchema.safeParse({
+      idempotencyKey: "30000000-0000-4000-8000-000000000001",
+      items: [
+        {
+          action: "increment_existing_variant",
+          quantity: 1,
+          variantId: "20000000-0000-4000-8000-000000000001",
+        },
+      ],
+    });
+
+    expect(parsed.success).toBe(false);
+  });
 });

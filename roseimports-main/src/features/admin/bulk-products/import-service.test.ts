@@ -7,14 +7,26 @@ const request = {
   payloadHash: "sha256:example",
   items: [
     {
-      action: "increment_existing_variant" as const,
+      action: "create_product_with_sale_data" as const,
       quantity: 2,
-      variantId: "20000000-0000-4000-8000-000000000001",
       name: "Lattafa Jasoor",
+      slug: "lattafa-jasoor",
       brand: "Lattafa",
       categoryId: "90000000-0000-4000-8000-000000000001",
       productType: "perfume" as const,
       gender: "masculino" as const,
+      olfactoryFamilyId: null,
+      description: null,
+      featured: false,
+      promotional: false,
+      variantLabel: "100 ml",
+      concentration: "EDP" as const,
+      volumeMl: 100,
+      variantType: "full" as const,
+      isKit: false,
+      components: [],
+      priceCents: 30_000 as const,
+      availableForSale: true as const,
     },
   ],
 };
@@ -22,9 +34,9 @@ const request = {
 describe("confirmBulkProductImport", () => {
   it("confirma o lote inteiro por uma única RPC transacional", async () => {
     const summary = {
-      productsCreated: 0,
-      variantsCreated: 0,
-      existingVariantsUpdated: 1,
+      productsCreated: 1,
+      variantsCreated: 1,
+      existingVariantsUpdated: 0,
       unitsAdded: 2,
     };
     const rpc = vi.fn().mockResolvedValue({ data: summary, error: null });

@@ -3,12 +3,14 @@
 import { useMemo, useState, useTransition } from "react";
 
 import { slugify } from "@/lib/slug";
-import { normalizeProductName } from "@/lib/product-name";
 import { categorySlugForProductType } from "@/lib/product-category";
 
 import { analyzeBulkProducts, confirmBulkProducts } from "./actions";
 import type { BulkProductImportSummary } from "./import-service";
-import { buildBulkVariantLabel } from "./parser";
+import {
+  buildBulkVariantLabel,
+  normalizeBulkProductDisplayName,
+} from "./parser";
 import {
   buildConfirmItems,
   BULK_PRODUCT_FIXED_PRICE_CENTS,
@@ -56,13 +58,11 @@ const blockerLabels: Record<BulkProductConfirmationBlocker, string> = {
   gender_missing: "Escolha o gênero",
   volume_missing: "Informe o volume da versão",
   quantity_invalid: "Informe uma quantidade entre 1 e 9.999",
-  manual_review_required: "Confirme que revisou os dados e a decisão",
   category_unavailable: "A categoria escolhida não está disponível",
   price_missing: "O preço fixo deve ser R$ 300,00",
   sale_data_required: "Cadastre o produto com preço e venda habilitada",
   sale_availability_required: "Confirme que a versão ficará disponível para venda",
   product_target_missing: "Escolha o produto que receberá a nova versão",
-  variant_target_missing: "Escolha a versão que receberá o estoque",
 };
 
 export function BulkProductImport() {
@@ -256,12 +256,13 @@ export function BulkProductImport() {
             onChange={(event) => setInput(event.target.value)}
             rows={11}
             className={`${inputClass} min-h-56 resize-y leading-relaxed`}
-            placeholder="Ex.: 2 LATTAFA JASOOR EDP, 100 ML"
+            placeholder="Ex.: 1. LATTAFA JASOOR EDP 100 ML; Quantidade: 2 unidades; Marca: Lattafa; Gênero: unissex; Volume: 100 ml"
           />
 
           <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <p className="max-w-xl text-xs leading-relaxed text-muted">
-              Nome, marca, categoria, tipo e gênero precisam estar completos.
+              Você pode informar Quantidade, Marca, Gênero e Volume na mesma
+              linha, separados por ponto e vírgula, ou logo abaixo do produto.
               Dados ausentes permanecem em revisão e nunca são inventados.
             </p>
             <button
@@ -375,7 +376,7 @@ export function BulkProductImport() {
                     ? "Selecione ao menos um item apto para continuar."
                     : blockedSelectedCount > 0
                       ? `${blockedSelectedCount} ${blockedSelectedCount === 1 ? "item selecionado precisa" : "itens selecionados precisam"} de correção. Veja o motivo no cartão.`
-                      : "Tudo pronto. Produtos novos serão cadastrados com venda habilitada."}
+                      : "Tudo pronto. As ações selecionadas serão aplicadas na confirmação."}
               </p>
             </div>
             <button
@@ -433,6 +434,8 @@ function ProductCard({
   onDuplicate: () => void;
 }) {
   const eligible = isItemConfirmable({ ...item, selected: true }, categoryIds);
+  const exactDuplicate =
+    item.status === "existing_product" && Boolean(item.matchedVariantId);
   const needsReview =
     item.status === "possible_duplicate" ||
     item.status === "incomplete" ||
@@ -490,25 +493,36 @@ function ProductCard({
           >
             {statusLabels[item.status]}
           </span>
-          <label className="flex items-center gap-2 text-xs font-medium text-ink">
-            <input
-              type="checkbox"
-              aria-label={`Selecionar ${item.name}`}
-              checked={item.selected}
-              disabled={!eligible}
-              aria-describedby={actionHelpId}
-              onChange={(event) => onUpdate({ selected: event.target.checked })}
-              className="size-4 accent-rose disabled:opacity-40"
-            />
-            Selecionar
-          </label>
+          {exactDuplicate ? (
+            <span className="text-xs font-medium text-muted">
+              Ignorado automaticamente
+            </span>
+          ) : (
+            <label className="flex items-center gap-2 text-xs font-medium text-ink">
+              <input
+                type="checkbox"
+                aria-label={`Selecionar ${item.name}`}
+                checked={item.selected}
+                disabled={!eligible}
+                aria-describedby={actionHelpId}
+                onChange={(event) => onUpdate({ selected: event.target.checked })}
+                className="size-4 accent-rose disabled:opacity-40"
+              />
+              Selecionar
+            </label>
+          )}
         </div>
       </header>
 
+      {exactDuplicate ? (
+        <div className="bg-sky-50/45 px-4 py-4 text-sm text-sky-950 sm:px-5">
+          Duplicidade completa encontrada. Esta linha ficará fora do cadastro e
+          não alterará o estoque existente.
+        </div>
+      ) : (
       <div className="space-y-6 p-4 sm:p-5">
         <ReviewActionPanel
           item={item}
-          needsReview={needsReview}
           blockers={blockers}
           actionHelpId={actionHelpId}
           onUpdate={onUpdate}
@@ -546,7 +560,11 @@ function ProductCard({
                   });
                 }}
                 onBlur={() => {
-                  const normalizedName = normalizeProductName(item.name);
+                  const normalizedName = normalizeBulkProductDisplayName(
+                    item.name,
+                    item.productType,
+                    item.source,
+                  );
                   onUpdate({
                     name: normalizedName,
                     slug: slugify(normalizedName),
@@ -621,8 +639,15 @@ function ProductCard({
                   const productType = event.target.value
                     ? (event.target.value as EditableBulkProduct["productType"])
                     : null;
+                  const name = normalizeBulkProductDisplayName(
+                    item.name,
+                    productType,
+                    item.source,
+                  );
 
                   onUpdate({
+                    name,
+                    slug: slugify(name),
                     productType,
                     categorySlug: categorySlugForProductType(productType),
                   });
@@ -848,19 +873,18 @@ function ProductCard({
         ) : null}
 
       </div>
+      )}
     </article>
   );
 }
 
 function ReviewActionPanel({
   item,
-  needsReview,
   blockers,
   actionHelpId,
   onUpdate,
 }: {
   item: EditableBulkProduct;
-  needsReview: boolean;
   blockers: BulkProductConfirmationBlocker[];
   actionHelpId: string;
   onUpdate: (update: Partial<EditableBulkProduct>) => void;
@@ -918,20 +942,6 @@ function ReviewActionPanel({
               </p>
             </div>
           </div>
-        ) : null}
-
-        {needsReview && !skipped ? (
-          <label className="mt-3 flex cursor-pointer items-start gap-2 text-xs leading-relaxed text-ink">
-            <input
-              type="checkbox"
-              checked={item.reviewed}
-              onChange={(event) =>
-                onUpdate({ reviewed: event.target.checked, selected: false })
-              }
-              className="mt-0.5 size-4 shrink-0 accent-rose"
-            />
-            Revisei os dados e confirmei esta decisão manualmente.
-          </label>
         ) : null}
 
         <div id={actionHelpId} className="mt-3" aria-live="polite">
@@ -993,7 +1003,11 @@ function QuickRequiredFields({
               onUpdate({ name: normalizedName, slug: slugify(normalizedName) });
             }}
             onBlur={() => {
-              const normalizedName = normalizeProductName(item.name);
+              const normalizedName = normalizeBulkProductDisplayName(
+                item.name,
+                item.productType,
+                item.source,
+              );
               onUpdate({ name: normalizedName, slug: slugify(normalizedName) });
             }}
           />
@@ -1024,7 +1038,14 @@ function QuickRequiredFields({
               const productType = event.target.value
                 ? (event.target.value as EditableBulkProduct["productType"])
                 : null;
+              const name = normalizeBulkProductDisplayName(
+                item.name,
+                productType,
+                item.source,
+              );
               onUpdate({
+                name,
+                slug: slugify(name),
                 productType,
                 categorySlug: categorySlugForProductType(productType),
               });
@@ -1163,17 +1184,7 @@ function decisionOutcomeText(item: EditableBulkProduct): string {
     return `uma nova versão inativa será criada em ${target?.productName ?? "o produto escolhido"}, sem preço.`;
   }
 
-  const variantId = item.decision.variantId;
-  const target = item.candidates
-    .flatMap((candidate) =>
-      candidate.variants.map((variant) => ({ candidate, variant })),
-    )
-    .find(({ variant }) => variant.variantId === variantId);
-  return `a quantidade será somada ao estoque de ${
-    target
-      ? `${target.candidate.productName} — ${target.variant.label}`
-      : "a versão escolhida"
-  }.`;
+  return "nenhuma alteração será feita.";
 }
 
 function DecisionSelect({
@@ -1193,9 +1204,10 @@ function DecisionSelect({
       value={decisionValue(item.decision)}
       onChange={(event) => {
         const decision = parseDecision(event.target.value);
+        const selected = decision.type !== "review" && decision.type !== "skip";
         onUpdate({
           decision,
-          selected: false,
+          selected,
           availableForSale:
             decision.type === "create_product_with_sale_data"
               ? true
@@ -1210,9 +1222,11 @@ function DecisionSelect({
     >
       <option value="review">Escolha uma ação</option>
       <option value="skip">Não cadastrar esta linha</option>
-      <option value="create_product_with_sale_data">
-        Criar novo produto para venda
-      </option>
+      {item.status !== "existing_product" ? (
+        <option value="create_product_with_sale_data">
+          Criar novo produto para venda
+        </option>
+      ) : null}
       {options.map((option) => (
         <option key={option.value} value={option.value}>
           {option.label}
@@ -1228,8 +1242,15 @@ function decisionOptions(item: EditableBulkProduct) {
 
   for (const candidate of item.candidates) {
     const productValue = `create_variant:${candidate.productId}`;
+    const equivalentVariantExists = candidate.variants.some(
+      (variant) =>
+        variant.volumeMl === item.volumeMl &&
+        (variant.concentration === item.concentration ||
+          variant.concentration === null ||
+          item.concentration === null),
+    );
 
-    if (!seen.has(productValue)) {
+    if (!item.matchedVariantId && !equivalentVariantExists && !seen.has(productValue)) {
       options.push({
         value: productValue,
         label: `Criar variante inativa em ${candidate.productName}`,
@@ -1237,17 +1258,6 @@ function decisionOptions(item: EditableBulkProduct) {
       seen.add(productValue);
     }
 
-    for (const variant of candidate.variants) {
-      const value = `increment_variant:${variant.variantId}`;
-
-      if (!seen.has(value)) {
-        options.push({
-          value,
-          label: `Adicionar estoque: ${candidate.productName} — ${variant.label}`,
-        });
-        seen.add(value);
-      }
-    }
   }
 
   if (
@@ -1260,25 +1270,12 @@ function decisionOptions(item: EditableBulkProduct) {
     });
   }
 
-  if (
-    item.matchedVariantId &&
-    !seen.has(`increment_variant:${item.matchedVariantId}`)
-  ) {
-    options.push({
-      value: `increment_variant:${item.matchedVariantId}`,
-      label: "Adicionar estoque à variante encontrada",
-    });
-  }
-
   return options;
 }
 
 function decisionValue(decision: BulkProductDecision) {
   if (decision.type === "create_variant") {
     return `create_variant:${decision.productId}`;
-  }
-  if (decision.type === "increment_variant") {
-    return `increment_variant:${decision.variantId}`;
   }
   return decision.type;
 }
@@ -1291,9 +1288,6 @@ function parseDecision(value: string): BulkProductDecision {
   }
   if (value.startsWith("create_variant:")) {
     return { type: "create_variant", productId: value.slice(15) };
-  }
-  if (value.startsWith("increment_variant:")) {
-    return { type: "increment_variant", variantId: value.slice(18) };
   }
   return { type: "review" };
 }

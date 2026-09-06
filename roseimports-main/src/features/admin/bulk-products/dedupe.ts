@@ -1,7 +1,8 @@
-import type {
-  BulkProductConcentration,
-  KitComponent,
-  ParsedBulkProduct,
+import {
+  normalizeProductIdentityFromDescription,
+  type BulkProductConcentration,
+  type KitComponent,
+  type ParsedBulkProduct,
 } from "./parser";
 
 export type BulkProductAnalysisStatus =
@@ -13,8 +14,7 @@ export type BulkProductAnalysisStatus =
 
 export type BulkProductProposedAction =
   | "create_inactive_product"
-  | "create_inactive_variant"
-  | "increment_existing_variant";
+  | "create_inactive_variant";
 
 export type BulkProductAnalysisReason =
   | "duplicate_in_batch"
@@ -94,18 +94,31 @@ export function findCatalogDuplicateIndexes(
 ): number[] {
   return items.flatMap((item, index) => {
     const normalizedBrand = normalizeIdentity(item.brand);
+    const normalizedName = normalizeProductIdentityFromDescription(
+      item.name,
+      item.productType,
+    );
     const normalizedCoreName = removeBrandFromIdentity(
-      normalizeIdentity(item.name),
+      normalizedName,
       normalizedBrand,
     );
     const duplicateFound = catalog.some(
-      (candidate) =>
-        candidate.productType === item.productType &&
-        candidate.normalizedBrand === normalizedBrand &&
-        candidate.normalizedCoreName === normalizedCoreName &&
-        candidate.variants.some((variant) =>
-          sameVariantIdentity(item, variant),
-        ),
+      (candidate) => {
+        const sameStructuredIdentity =
+          candidate.productType === item.productType &&
+          candidate.normalizedBrand === normalizedBrand &&
+          sameCoreIdentity(candidate.normalizedCoreName, normalizedCoreName);
+        const sameCanonicalName = candidate.normalizedName === normalizedName;
+        const missingFormConflict =
+          !hasProductForm(normalizedName) &&
+          hasProductForm(candidate.normalizedName) &&
+          stripProductForm(candidate.normalizedName) === normalizedName;
+
+        return (
+          (sameStructuredIdentity || sameCanonicalName || missingFormConflict) &&
+          candidate.variants.some((variant) => sameVariantIdentity(item, variant))
+        );
+      },
     );
 
     return duplicateFound ? [index] : [];
@@ -117,21 +130,29 @@ export function findRepeatedImportIndexes(
 ): number[] {
   return items.flatMap((item, index) => {
     const normalizedBrand = normalizeIdentity(item.brand);
+    const normalizedName = normalizeProductIdentityFromDescription(
+      item.name,
+      item.productType,
+    );
     const normalizedCoreName = removeBrandFromIdentity(
-      normalizeIdentity(item.name),
+      normalizedName,
       normalizedBrand,
     );
     const repeated = items.slice(0, index).some((previous) => {
       const previousBrand = normalizeIdentity(previous.brand);
+      const previousName = normalizeProductIdentityFromDescription(
+        previous.name,
+        previous.productType,
+      );
       const previousCoreName = removeBrandFromIdentity(
-        normalizeIdentity(previous.name),
+        previousName,
         previousBrand,
       );
 
       return (
         previous.productType === item.productType &&
         previousBrand === normalizedBrand &&
-        previousCoreName === normalizedCoreName &&
+        sameCoreIdentity(previousCoreName, normalizedCoreName) &&
         sameVariantIdentity(item, previous)
       );
     });
@@ -190,7 +211,7 @@ function analyzeRecord(
   const sameProduct = catalog.filter(
     (candidate) =>
       candidate.productType === record.productType &&
-      candidate.normalizedCoreName === normalizedCoreName &&
+      sameCoreIdentity(candidate.normalizedCoreName, normalizedCoreName) &&
       candidate.normalizedBrand === normalizedBrand,
   );
 
@@ -214,12 +235,62 @@ function analyzeRecord(
     if (firstMatch) {
       return result(record, {
         status: "existing_product",
-        proposedAction: "increment_existing_variant",
+        proposedAction: null,
         matchedProductId: firstMatch.product.productId,
         matchedVariantId: firstMatch.variant.variantId,
         candidates: sameProduct,
       });
     }
+  }
+
+  // Nomes idênticos com a mesma variante continuam sendo o mesmo item mesmo
+  // quando marca ou tipo foram cadastrados de forma inconsistente no legado.
+  // Só automatizamos quando existe um único destino possível no catálogo.
+  const sameCanonicalIdentity = catalog.flatMap((product) =>
+    product.normalizedName === record.normalizedName
+      ? product.variants
+          .filter((variant) => sameVariantIdentity(record, variant))
+          .map((variant) => ({ product, variant }))
+      : [],
+  );
+
+  if (record.brand && record.productType && sameCanonicalIdentity.length === 1) {
+    const [match] = sameCanonicalIdentity;
+    return result(record, {
+      status: "existing_product",
+      proposedAction: null,
+      matchedProductId: match?.product.productId ?? null,
+      matchedVariantId: match?.variant.variantId ?? null,
+      candidates: match ? [match.product] : [],
+    });
+  }
+
+  if (sameCanonicalIdentity.length > 1) {
+    return result(record, {
+      status: "possible_duplicate",
+      reasons: ["similar_catalog_product"],
+      candidates: sameCanonicalIdentity.map(({ product }) => product),
+    });
+  }
+
+  // Uma entrada sem "BODY SPLASH/BODY CREAM" pode ter sido classificada como
+  // perfume, embora o catálogo legado já tenha o mesmo nome e volume em outro
+  // formato. Nessa situação jamais liberamos a criação automática.
+  const missingFormConflicts = !hasProductForm(record.normalizedName)
+    ? catalog.filter(
+        (candidate) =>
+          hasProductForm(candidate.normalizedName) &&
+          stripProductForm(candidate.normalizedName) === record.normalizedName &&
+          candidate.variants.some((variant) => sameVariantIdentity(record, variant)),
+      )
+    : [];
+
+  if (missingFormConflicts.length > 0) {
+    return result(record, {
+      status: "possible_duplicate",
+      reasons: ["similar_catalog_product"],
+      candidates: missingFormConflicts,
+    });
   }
 
   if (requiredFieldReasons.length > 0) {
@@ -239,7 +310,7 @@ function analyzeRecord(
     if (exactVariants?.length === 1) {
       return result(record, {
         status: "existing_product",
-        proposedAction: "increment_existing_variant",
+        proposedAction: null,
         matchedProductId: product?.productId ?? null,
         matchedVariantId: exactVariants[0]?.variantId ?? null,
         candidates: product ? [product] : [],
@@ -275,6 +346,7 @@ function analyzeRecord(
     (candidate) =>
       candidate.productType === record.productType &&
       candidate.normalizedBrand === normalizedBrand &&
+      candidate.variants.some((variant) => variant.isKit === record.isKit) &&
       tokenSimilarity(candidate.normalizedCoreName, normalizedCoreName) >= 0.8,
   );
 
@@ -329,7 +401,7 @@ function result(
 function hasInsufficientProductIdentity(record: ParsedBulkProduct): boolean {
   if (!record.name) return true;
 
-  const identity = record.normalizedName;
+  const identity = stripProductForm(record.normalizedName);
   const brand = normalizeIdentity(record.brand ?? "");
   const genericPatterns = [
     /^desodorantes? perfumados? arabes?(?: femininos?| masculinos?)?$/,
@@ -363,11 +435,30 @@ function sameVariantIdentity(
     candidate.concentration === null ||
     record.concentration === null;
 
+  if (
+    !concentrationMatches ||
+    candidate.variantType !== record.variantType ||
+    candidate.isKit !== record.isKit
+  ) {
+    return false;
+  }
+
+  // Alguns kits legados foram gravados apenas como variante "Kit", sem volume
+  // ou composição estruturada. Quando nome, marca, tipo e natureza de kit já
+  // coincidem, essa ausência de metadados não pode criar uma segunda variante.
+  if (
+    record.isKit &&
+    (record.components.length === 0 || candidate.components.length === 0)
+  ) {
+    return (
+      record.volumeMl === candidate.volumeMl ||
+      record.volumeMl === null ||
+      candidate.volumeMl === null
+    );
+  }
+
   return (
     candidate.volumeMl === record.volumeMl &&
-    concentrationMatches &&
-    candidate.variantType === record.variantType &&
-    candidate.isKit === record.isKit &&
     componentSignature(candidate.components) === componentSignature(record.components)
   );
 }
@@ -409,4 +500,27 @@ export function removeBrandFromIdentity(
     .replace(` ${normalizedBrand} `, " ")
     .trim()
     .replace(/\s+/g, " ");
+}
+
+function sameCoreIdentity(left: string, right: string): boolean {
+  if (left === right) return true;
+  if (!left || !right) return false;
+
+  return coreIdentitySignature(left) === coreIdentitySignature(right);
+}
+
+function coreIdentitySignature(value: string): string {
+  return value
+    .split(" ")
+    .filter((token) => token && token !== "imports")
+    .sort()
+    .join(" ");
+}
+
+function hasProductForm(normalizedName: string): boolean {
+  return /\bbody (?:splash|cream|lotion)$/.test(normalizedName);
+}
+
+function stripProductForm(normalizedName: string): string {
+  return normalizedName.replace(/\s+body (?:splash|cream|lotion)$/, "").trim();
 }

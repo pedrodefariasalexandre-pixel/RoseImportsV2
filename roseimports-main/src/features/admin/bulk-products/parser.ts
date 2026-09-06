@@ -47,14 +47,19 @@ type Section = "body_splash" | "cosmetico" | "kit" | "perfume";
 const BRANDS = [
   "Victoria's Secret",
   "Carolina Herrera",
+  "Orientica Premium",
+  "Isabelle La Belle",
   "Maison Alhambra",
   "Aurora Scents",
   "French Avenue",
+  "Lattafa Pride",
+  "Assala Prime",
   "Al Wataniah",
   "Al Haramain",
   "V.V. Love",
   "Al Absar",
   "Lattafa",
+  "Asdaaf",
   "Armaf",
   "Mugler",
   "Rasasi",
@@ -103,55 +108,6 @@ export function parseBulkProducts(input: string): ParsedBulkProduct[] {
       continue;
     }
 
-    if (/^quantidade\s+total\s*:/i.test(source)) {
-      const lastIndex = records.length - 1;
-
-      if (lastIndex >= 0 && groupedVariationCandidates[lastIndex]) {
-        markSharedQuantity(records[lastIndex]);
-      }
-
-      continue;
-    }
-
-    if (/^quantidade\s*:/i.test(source)) {
-      const quantity = readQuantity(source);
-      const last = records.at(-1);
-
-      if (last && quantity !== null) last.quantity = quantity;
-      continue;
-    }
-
-    if (/^varia[cç][oõ]es\s*:/i.test(source)) {
-      const variationGroup = parseVariationGroup(source);
-      const last = records.at(-1);
-
-      if (last) {
-        last.variations = variationGroup.variations;
-        if (variationGroup.quantity !== null) {
-          last.quantity = variationGroup.quantity;
-        }
-        markSharedQuantity(last);
-        groupedVariationCandidates[records.length - 1] = true;
-      } else if (variationGroup.variations.length > 0) {
-        const name = variationGroup.variations.join(" / ");
-
-        records.push(
-          buildRecord({
-            source,
-            sourceLine: lineIndex + 1,
-            description: name,
-            quantity: variationGroup.quantity ?? 1,
-            section: currentSection,
-            forcedVariations: variationGroup.variations,
-            forcedIssue: "shared_quantity_between_variations",
-          }),
-        );
-        groupedVariationCandidates.push(true);
-      }
-
-      continue;
-    }
-
     if (IGNORED_DOCUMENT_HEADINGS.has(normalizedLine) || isSeparator(source)) {
       continue;
     }
@@ -176,6 +132,44 @@ export function parseBulkProducts(input: string): ParsedBulkProduct[] {
     description = inlineMetadata.description;
     quantity = inlineMetadata.quantity ?? quantity;
 
+    if (!description) {
+      const lastIndex = records.length - 1;
+      const last = records[lastIndex];
+
+      if (last) {
+        const isVariationTotal =
+          inlineMetadata.quantityIsTotal &&
+          (groupedVariationCandidates[lastIndex] ||
+            last.variations.length > 1 ||
+            last.name.includes("/"));
+
+        applyMetadata(last, {
+          ...inlineMetadata,
+          quantity:
+            inlineMetadata.quantityIsTotal && !isVariationTotal
+              ? null
+              : inlineMetadata.quantity,
+        });
+        groupedVariationCandidates[lastIndex] = last.variations.length > 1;
+      } else if (inlineMetadata.variations.length > 0) {
+        const name = inlineMetadata.variations.join(" / ");
+        const record = buildRecord({
+          source,
+          sourceLine: lineIndex + 1,
+          description: name,
+          quantity: inlineMetadata.quantity ?? 1,
+          section: currentSection,
+          forcedVariations: inlineMetadata.variations,
+          forcedIssue: "shared_quantity_between_variations",
+        });
+        applyMetadata(record, inlineMetadata);
+        records.push(record);
+        groupedVariationCandidates.push(true);
+      }
+
+      continue;
+    }
+
     const record = buildRecord({
       source,
       sourceLine: lineIndex + 1,
@@ -188,6 +182,8 @@ export function parseBulkProducts(input: string): ParsedBulkProduct[] {
         : undefined,
     });
 
+    applyMetadata(record, inlineMetadata);
+
     records.push(record);
     groupedVariationCandidates.push(record.variations.length > 1);
   }
@@ -199,51 +195,166 @@ export function parseBulkProducts(input: string): ParsedBulkProduct[] {
 function readInlineMetadata(value: string): {
   description: string;
   quantity: number | null;
+  quantityIsTotal: boolean;
+  brand: string | null;
+  gender: BulkProductGender | null;
+  volumeMl: number | null;
   variations: string[];
   sharedQuantity: boolean;
 } {
-  let description = value;
-  let quantity: number | null = null;
-  let sharedQuantity = false;
+  const matches = [
+    ...value.matchAll(
+      /(?:^|\s*;\s*|\s+[—–-]?\s*)(quantidade\s+total|quantidade|marca|g[eê]nero|volume|varia[cç][oõ]es)\s*:/giu,
+    ),
+  ];
 
-  const quantityMatch = description.match(
-    /\s+quantidade\s*(?:(total)\s*)?:\s*(\d+)(?:\s+(?:unidades?|kits?))?(?:,.*)?$/i,
-  );
-
-  if (quantityMatch?.index !== undefined) {
-    description = description.slice(0, quantityMatch.index);
-    quantity = Number(quantityMatch[2]);
-    sharedQuantity = Boolean(quantityMatch[1]);
+  if (matches.length === 0) {
+    return {
+      description: collapseWhitespace(value),
+      quantity: null,
+      quantityIsTotal: false,
+      brand: null,
+      gender: null,
+      volumeMl: null,
+      variations: [],
+      sharedQuantity: false,
+    };
   }
 
-  const variationsMatch = description.match(/\s+varia[cç][oõ]es\s*:\s*(.+)$/i);
+  const description = collapseWhitespace(
+    value.slice(0, matches[0]?.index ?? value.length).replace(/[;\s]+$/g, ""),
+  );
+  let quantity: number | null = null;
+  let quantityIsTotal = false;
+  let brand: string | null = null;
+  let gender: BulkProductGender | null = null;
+  let volumeMl: number | null = null;
   let variations: string[] = [];
+  let sharedQuantity = false;
 
-  if (variationsMatch?.index !== undefined) {
-    description = description.slice(0, variationsMatch.index);
-    variations = parseVariationList(variationsMatch[1] ?? "");
+  matches.forEach((match, index) => {
+    const key = normalizeForComparison(match[1] ?? "");
+    const start = (match.index ?? 0) + match[0].length;
+    const end = matches[index + 1]?.index ?? value.length;
+    const metadataValue = collapseWhitespace(
+      value.slice(start, end).replace(/^[\s;—–-]+|[\s;—–-]+$/g, ""),
+    );
+
+    if (key === "quantidade" || key === "quantidade total") {
+      const parsedQuantity = metadataValue.match(/\d+/)?.[0];
+      if (parsedQuantity) quantity = Number(parsedQuantity);
+      if (key === "quantidade total") quantityIsTotal = true;
+      return;
+    }
+
+    if (key === "marca") {
+      brand = metadataValue || null;
+      return;
+    }
+
+    if (key === "genero") {
+      gender = readGender(metadataValue);
+      return;
+    }
+
+    if (key === "volume") {
+      volumeMl = readFirstVolume(metadataValue);
+      return;
+    }
+
+    if (key === "variacoes") {
+      variations = parseVariationList(metadataValue);
+      sharedQuantity = variations.length > 0;
+    }
+  });
+
+  if (quantityIsTotal && (description.includes("/") || variations.length > 0)) {
     sharedQuantity = true;
   }
 
-  if (sharedQuantity && !description.includes("/") && variations.length === 0) {
-    sharedQuantity = false;
-  }
-
   return {
-    description: collapseWhitespace(description),
+    description,
     quantity,
+    quantityIsTotal,
+    brand,
+    gender,
+    volumeMl,
     variations,
     sharedQuantity,
   };
 }
 
-/** Normalização compartilhada com a comparação do catálogo existente. */
-export function normalizeProductIdentityFromDescription(value: string): string {
-  const name = /^(?:kit|kits)\b/i.test(value)
-    ? readKitName(value)
-    : readProductName(value);
+function applyMetadata(
+  record: ParsedBulkProduct,
+  metadata: ReturnType<typeof readInlineMetadata>,
+): void {
+  if (metadata.quantity !== null) record.quantity = metadata.quantity;
 
-  return normalizeForComparison(name);
+  if (metadata.brand) {
+    record.brand = metadata.brand;
+    record.line = readLine(record.name, metadata.brand, record.isKit);
+  }
+
+  if (metadata.gender) record.gender = metadata.gender;
+
+  if (!record.isKit && metadata.volumeMl !== null) {
+    record.volumeMl = metadata.volumeMl;
+    record.variantLabel = buildBulkVariantLabel({
+      volumeMl: metadata.volumeMl,
+      isKit: false,
+      isDecant: record.variantType === "decant",
+    });
+  }
+
+  if (metadata.variations.length > 0) {
+    record.variations = metadata.variations;
+  }
+
+  if (
+    metadata.sharedQuantity ||
+    (metadata.quantityIsTotal && record.variations.length > 1)
+  ) {
+    markSharedQuantity(record);
+  }
+
+  if (!record.productType && metadata.volumeMl !== null) {
+    record.productType = "perfume";
+  }
+
+  record.categorySlug = categorySlugForProductType(record.productType);
+}
+
+/**
+ * Normalização compartilhada com a comparação do catálogo existente.
+ * O formato faz parte da identidade exibida: um perfume, um body splash e um
+ * body cream da mesma linha não podem ser tratados como o mesmo produto.
+ */
+export function normalizeProductIdentityFromDescription(
+  value: string,
+  productType: BulkProductType | null = null,
+): string {
+  if (/^(?:kit|kits)\b/i.test(value)) {
+    return normalizeForComparison(readKitName(value));
+  }
+
+  return normalizeForComparison(
+    normalizeBulkProductDisplayName(value, productType),
+  );
+}
+
+/** Garante o sufixo visual do formato sem duplicá-lo no nome. */
+export function normalizeBulkProductDisplayName(
+  value: string,
+  productType: BulkProductType | null,
+  source = value,
+): string {
+  if (/^(?:kit|kits)\b/i.test(value)) {
+    return normalizeProductName(readKitName(value));
+  }
+
+  const baseName = normalizeProductName(readProductName(value));
+  const productForm = readProductNameForm(`${value} ${source}`, null, productType);
+  return appendProductForm(baseName, productForm);
 }
 
 function buildRecord({
@@ -268,10 +379,15 @@ function buildRecord({
   const concentration = readConcentration(cleanDescription);
   const components = isKit ? readKitComponents(cleanDescription) : [];
   const volumeMl = isKit ? null : readFirstVolume(cleanDescription);
+  const productType = readProductType(cleanDescription, section, concentration, isKit);
   const rawName = isKit
     ? readKitName(cleanDescription)
     : readProductName(cleanDescription);
-  const name = normalizeProductName(rawName);
+  const baseName = normalizeProductName(rawName);
+  const productForm = isKit
+    ? null
+    : readProductNameForm(cleanDescription, section, productType);
+  const name = appendProductForm(baseName, productForm);
   const brand = readBrand(name);
   const line = readLine(name, brand, isKit);
   const gender = readGender(cleanDescription);
@@ -284,8 +400,6 @@ function buildRecord({
   ) {
     issues.push("shared_quantity_between_variations");
   }
-  const productType = readProductType(cleanDescription, section, concentration, isKit);
-
   return {
     source,
     sourceLine,
@@ -311,6 +425,41 @@ function buildRecord({
     slug: slugify(name),
     issues,
   };
+}
+
+type ProductNameForm = "BODY SPLASH" | "BODY CREAM" | "BODY LOTION" | null;
+
+function readProductNameForm(
+  description: string,
+  section: Section | null,
+  productType: BulkProductType | null,
+): ProductNameForm {
+  if (/\b(?:perfuming\s+)?body\s+lotion\b|\blo[cç][aã]o\s+corporal\b/i.test(description)) {
+    return "BODY LOTION";
+  }
+  if (/\bbody\s+cream\b/i.test(description) || section === "cosmetico") {
+    return "BODY CREAM";
+  }
+  if (
+    /\bbody\s+(?:splash|mist)\b|\bdesodorantes?\s+perfumados?\b/i.test(
+      description,
+    ) ||
+    section === "body_splash" ||
+    productType === "body_splash"
+  ) {
+    return "BODY SPLASH";
+  }
+  return null;
+}
+
+function appendProductForm(name: string, form: ProductNameForm): string {
+  if (!form) return name;
+
+  const withoutExistingForm = name
+    .replace(/\s+BODY\s+(?:SPLASH|MIST|CREAM|LOTION)$/i, "")
+    .trim();
+
+  return `${withoutExistingForm} ${form}`.trim();
 }
 
 export function buildBulkVariantLabel({
@@ -469,6 +618,7 @@ function readProductType(
   concentration: BulkProductConcentration | null,
   isKit: boolean,
 ): BulkProductType | null {
+  if (isKit || section === "kit") return "perfume";
   if (/\bbody\s+(?:splash|mist)\b/i.test(description)) return "body_splash";
   if (/\bdesodorantes?\s+perfumados?\b/i.test(description)) {
     return "body_splash";
@@ -479,8 +629,6 @@ function readProductType(
   if (section === "body_splash" || section === "cosmetico") return section;
   if (
     section === "perfume" ||
-    section === "kit" ||
-    isKit ||
     concentration ||
     /\b(?:perfume|decant|miniatura)\b/i.test(description)
   ) {
@@ -516,34 +664,12 @@ function readSlashVariations(name: string): string[] {
   return name.split("/").map((variation) => collapseWhitespace(variation));
 }
 
-function parseVariationGroup(source: string): {
-  variations: string[];
-  quantity: number | null;
-} {
-  const content = source
-    .replace(/^varia[cç][oõ]es\s*:\s*/i, "")
-    .split(/\s+[—–-]\s+quantidade\s+total\s*:/i)[0]
-    ?.trim() ?? "";
-  const quantityMatch = source.match(/quantidade\s+total\s*:\s*(\d+)/i);
-  const variations = parseVariationList(content);
-
-  return {
-    variations,
-    quantity: quantityMatch ? Number(quantityMatch[1]) : null,
-  };
-}
-
 function parseVariationList(value: string): string[] {
   return value
     .replace(/\s+e\s+([^,]+)$/i, ", $1")
     .split(",")
     .map((variation) => collapseWhitespace(variation))
     .filter(Boolean);
-}
-
-function readQuantity(value: string): number | null {
-  const match = value.match(/:\s*(\d+)/);
-  return match ? Number(match[1]) : null;
 }
 
 function markSharedQuantity(record: ParsedBulkProduct | undefined): void {

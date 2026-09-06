@@ -62,10 +62,13 @@ export type IncrementVariantImportItem = Omit<
     variantId: string;
   };
 
-export type ConfirmBulkProductImportItem =
+export type BulkProductCreationImportItem =
   | CreateProductImportItem
   | CreateProductWithSaleDataImportItem
-  | CreateVariantImportItem
+  | CreateVariantImportItem;
+
+export type ConfirmBulkProductImportItem =
+  | BulkProductCreationImportItem
   | IncrementVariantImportItem;
 
 export type ConfirmBulkProductImportRequest = {

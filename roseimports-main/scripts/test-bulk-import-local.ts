@@ -207,17 +207,6 @@ for (const analysis of analyses) {
     gender: analysis.gender,
   };
 
-  if (analysis.proposedAction === "increment_existing_variant") {
-    assert(analysis.matchedVariantId);
-    items.push({
-      action: "increment_existing_variant",
-      quantity: analysis.quantity,
-      variantId: analysis.matchedVariantId,
-      ...requiredProductFields,
-    });
-    continue;
-  }
-
   if (analysis.proposedAction !== "create_inactive_product") {
     continue;
   }
