@@ -23,7 +23,12 @@ const requiredProductFields = {
   name: z.string().trim().min(2).max(120),
   brand: z.string().trim().min(1).max(80),
   categoryId: z.string().uuid(),
-  productType: z.enum(["perfume", "body_splash", "body_cream"]),
+  productType: z.enum([
+    "perfume",
+    "body_splash",
+    "body_cream",
+    "cosmetico",
+  ]),
   gender: z.enum(["feminino", "masculino", "unissex"]),
 };
 

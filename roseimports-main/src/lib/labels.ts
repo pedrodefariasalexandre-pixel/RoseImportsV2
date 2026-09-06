@@ -35,6 +35,7 @@ export const PRODUCT_TYPE_LABEL: Record<string, string> = {
   perfume: "Perfume",
   body_splash: "Body splash",
   body_cream: "Body cream",
+  cosmetico: "Cosmético",
   eletronico: "Eletrônico",
   acessorio: "Acessório",
 };

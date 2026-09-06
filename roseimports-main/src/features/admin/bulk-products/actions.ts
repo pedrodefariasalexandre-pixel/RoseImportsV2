@@ -53,6 +53,7 @@ export type AnalyzeBulkProductsResult =
         perfumes: string | null;
         "body-splash": string | null;
         "body-cream": string | null;
+        cosmeticos: string | null;
       };
       confirmationAvailable: boolean;
       schemaMode: "full" | "legacy";
@@ -186,6 +187,7 @@ export async function analyzeBulkProducts(
       perfumes: categoryBySlug.get("perfumes") ?? null,
       "body-splash": categoryBySlug.get("body-splash") ?? null,
       "body-cream": categoryBySlug.get("body-cream") ?? null,
+      cosmeticos: categoryBySlug.get("cosmeticos") ?? null,
     },
     confirmationAvailable: catalogResult.mode === "full",
     schemaMode: catalogResult.mode,

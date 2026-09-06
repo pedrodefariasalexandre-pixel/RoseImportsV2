@@ -50,6 +50,7 @@ const categoryIds = {
   perfumes: "90000000-0000-4000-8000-000000000001",
   "body-splash": "90000000-0000-4000-8000-000000000002",
   "body-cream": "90000000-0000-4000-8000-000000000003",
+  cosmeticos: "90000000-0000-4000-8000-000000000004",
 };
 
 describe("modelo da revisão do cadastro em lote", () => {

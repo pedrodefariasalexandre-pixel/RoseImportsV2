@@ -2,12 +2,17 @@ import { slugify } from "../../../lib/slug";
 import { normalizeProductName } from "../../../lib/product-name";
 import { categorySlugForProductType } from "../../../lib/product-category";
 
-export type BulkProductType = "perfume" | "body_splash" | "body_cream";
+export type BulkProductType =
+  | "perfume"
+  | "body_splash"
+  | "body_cream"
+  | "cosmetico";
 
 export type BulkProductCategorySlug =
   | "perfumes"
   | "body-splash"
-  | "body-cream";
+  | "body-cream"
+  | "cosmeticos";
 
 export type BulkProductConcentration = "EDP" | "EDT" | "Parfum";
 

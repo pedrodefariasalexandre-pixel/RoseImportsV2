@@ -41,6 +41,13 @@ const bodyCreamTypeMigration = readFileSync(
   ),
   "utf8",
 );
+const cosmeticTypeMigration = readFileSync(
+  resolve(
+    process.cwd(),
+    "supabase/migrations/0022_tipo_cosmetico_e_menu.sql",
+  ),
+  "utf8",
+);
 
 describe("migration de cadastro em lote", () => {
   it("modela componentes de kit ligados à variante", () => {
@@ -110,6 +117,18 @@ describe("migration de cadastro em lote", () => {
     );
     expect(bodyCreamTypeMigration).toContain(
       "execute replace(v_definition, '''cosmetico''', '''body_cream''')",
+    );
+  });
+
+  it("mantém cosmético como quarto tipo sem misturar com body cream", () => {
+    expect(cosmeticTypeMigration).toContain(
+      "values ('Cosméticos', 'cosmeticos', true, 4)",
+    );
+    expect(cosmeticTypeMigration).toContain(
+      "when new.product_type = 'cosmetico' then 'cosmeticos'",
+    );
+    expect(cosmeticTypeMigration).toContain(
+      "'body_cream', 'cosmetico'",
     );
   });
 

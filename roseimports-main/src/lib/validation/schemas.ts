@@ -163,6 +163,7 @@ export const productSchema = z.object({
     "perfume",
     "body_splash",
     "body_cream",
+    "cosmetico",
   ]),
 
   gender: z.preprocess(

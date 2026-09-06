@@ -289,6 +289,10 @@ export function ProductForm({
               <option value="body_cream">
                 Body cream
               </option>
+
+              <option value="cosmetico">
+                Cosmético
+              </option>
             </select>
           </Field>
 

@@ -11,7 +11,6 @@ import { whatsappContactUrl } from "@/lib/whatsapp";
 
 const NAV = [
   { href: "/catalogo?categoria=perfumes", label: "Perfumes" },
-  { href: "/catalogo?categoria=body-splash", label: "Body Splash" },
   { href: "/catalogo?categoria=body-cream", label: "Body Cream" },
   { href: "/catalogo?genero=masculino", label: "Masculino" },
   { href: "/catalogo?genero=feminino", label: "Feminino" },

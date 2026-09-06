@@ -77,6 +77,7 @@ export function BulkProductImport() {
     perfumes: null,
     "body-splash": null,
     "body-cream": null,
+    cosmeticos: null,
   });
   const [idempotencyKey, setIdempotencyKey] = useState("");
   const [confirmationAvailable, setConfirmationAvailable] = useState(false);
@@ -648,6 +649,9 @@ function ProductCard({
                 {expectedCategory === "body-cream" ? (
                   <option value="body-cream">Body Cream</option>
                 ) : null}
+                {expectedCategory === "cosmeticos" ? (
+                  <option value="cosmeticos">Cosméticos</option>
+                ) : null}
               </select>
               <p className="mt-1.5 text-xs leading-relaxed text-muted">
                 Definida automaticamente pelo tipo de produto.
@@ -687,6 +691,7 @@ function ProductCard({
                 <option value="perfume">Perfume</option>
                 <option value="body_splash">Body splash</option>
                 <option value="body_cream">Body cream</option>
+                <option value="cosmetico">Cosmético</option>
               </select>
             </FormField>
             ) : null}
@@ -1085,6 +1090,7 @@ function QuickRequiredFields({
             <option value="perfume">Perfume</option>
             <option value="body_splash">Body splash</option>
             <option value="body_cream">Body cream</option>
+            <option value="cosmetico">Cosmético</option>
           </select>
         </FormField>
       ) : null}
@@ -1113,6 +1119,9 @@ function QuickRequiredFields({
             ) : null}
             {expectedCategory === "body-cream" ? (
               <option value="body-cream">Body Cream</option>
+            ) : null}
+            {expectedCategory === "cosmeticos" ? (
+              <option value="cosmeticos">Cosméticos</option>
             ) : null}
           </select>
         </FormField>
