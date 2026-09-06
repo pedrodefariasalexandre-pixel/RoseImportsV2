@@ -201,6 +201,41 @@ export function VariantSelector({
       <p className="border-t border-line pt-5 text-xs text-muted">
         {delivery.note}
       </p>
+
+      {selected && selected.maxQuantity > 0 && (
+        <div className="fixed inset-x-0 bottom-0 z-50 border-t border-line bg-surface/95 px-4 pt-3 shadow-[0_-10px_30px_rgba(25,20,19,0.10)] backdrop-blur-md pb-[max(0.75rem,env(safe-area-inset-bottom))] lg:hidden">
+          <div className="mx-auto flex max-w-xl items-center gap-3">
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-xs text-muted">{selected.label}</p>
+              <p className="text-base font-semibold">
+                {formatCents(selected.priceCents)}
+              </p>
+            </div>
+
+            {added || (inCart > 0 && remaining === 0) ? (
+              <Link
+                href="/carrinho"
+                className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-lg bg-ink px-5 text-xs font-semibold tracking-[0.08em] text-ivory uppercase"
+              >
+                Ver carrinho
+              </Link>
+            ) : (
+              <button
+                type="button"
+                onClick={handleAdd}
+                disabled={!canAdd}
+                className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-lg bg-rose px-5 text-xs font-semibold tracking-[0.08em] text-white uppercase transition-colors hover:bg-rose-deep disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                Adicionar
+              </button>
+            )}
+
+            <span className="sr-only" aria-live="polite">
+              {added ? "Produto adicionado ao carrinho." : ""}
+            </span>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

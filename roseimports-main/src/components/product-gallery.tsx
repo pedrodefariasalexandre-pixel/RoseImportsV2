@@ -49,7 +49,7 @@ export function ProductGallery({
         </div>
       )}
 
-      <div className="group/gallery order-1 relative aspect-square w-full min-w-0 overflow-hidden rounded-xl border border-line bg-gradient-to-br from-surface to-ivory-deep shadow-[inset_0_0_0_1px_rgba(255,255,255,0.45)] sm:order-2">
+      <div className="group/gallery order-1 relative aspect-[4/3] w-full min-w-0 overflow-hidden rounded-xl border border-line bg-gradient-to-br from-surface to-ivory-deep shadow-[inset_0_0_0_1px_rgba(255,255,255,0.45)] sm:order-2 sm:aspect-square">
         <ProductImage
           path={current?.path ?? null}
           alt={current?.alt ?? productName}

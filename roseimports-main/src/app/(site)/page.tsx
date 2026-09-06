@@ -34,7 +34,7 @@ export default async function HomePage() {
       {/* =====================================================
           HERO
           ===================================================== */}
-      <section className="mx-auto max-w-7xl px-4 pt-5 sm:px-6 sm:pt-7 lg:px-8">
+      <section className="mx-auto max-w-7xl px-4 pt-3 sm:px-6 sm:pt-5 lg:px-8 lg:pt-7">
         <div className="overflow-hidden rounded-2xl">
           <HeroCarousel />
         </div>

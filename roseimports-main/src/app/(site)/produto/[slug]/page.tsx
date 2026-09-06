@@ -48,7 +48,7 @@ export default async function ProdutoPage({ params }: { params: Params }) {
 
   return (
     <>
-      <div className="mx-auto max-w-7xl px-5 py-7 sm:py-10 lg:py-12">
+      <div className="mx-auto max-w-7xl px-5 py-5 sm:py-10 lg:py-12">
         <nav aria-label="Trilha" className="text-xs text-muted">
           <Link href="/" className="hover:text-rose">Início</Link>
           <span className="mx-2" aria-hidden>/</span>
@@ -110,6 +110,7 @@ export default async function ProdutoPage({ params }: { params: Params }) {
         </div>
       </div>
       <TrustStrip />
+      <div className="h-20 lg:hidden" aria-hidden />
     </>
   );
 }

@@ -193,6 +193,8 @@ export function HeroCarousel() {
       className={`
         grid overflow-hidden
         bg-surface
+        md:h-[460px]
+        md:grid-cols-[0.88fr_1.12fr]
         lg:h-[512px]
         lg:grid-cols-[0.9fr_1.1fr]
         ${ready ? "" : "opacity-0"}
@@ -203,12 +205,12 @@ export function HeroCarousel() {
         className="
           group/image
           relative
-          h-[300px]
+          h-[210px]
           overflow-hidden
           rounded-r-2xl
           bg-surface
-          sm:h-[360px]
-          lg:h-full
+          sm:h-[260px]
+          md:h-full
         "
       >
         <ProductImage
@@ -335,10 +337,10 @@ export function HeroCarousel() {
           bg-gradient-to-br
           from-surface
           to-rose-wash/30
-          px-6 py-8
-          sm:px-8 sm:py-10
+          px-5 py-5
+          sm:px-7 sm:py-7
+          md:h-full md:overflow-hidden md:px-8 md:py-7
           lg:px-10 lg:py-10
-          lg:h-full lg:overflow-hidden
           xl:px-12
         "
       >
@@ -374,16 +376,15 @@ export function HeroCarousel() {
         {/* Nome */}
         <h1
           className="
-            mt-4
+            mt-3
             max-w-[17ch]
             line-clamp-2
-            min-h-[4.45rem]
+            min-h-[3.9rem]
             text-3xl font-bold
             leading-[1.05]
             tracking-[-0.035em]
             text-ink
-            sm:text-4xl
-            sm:min-h-[5rem]
+            sm:min-h-[4.5rem] sm:text-4xl
             lg:min-h-[5.9rem] lg:text-[2.8rem]
           "
         >
@@ -395,17 +396,17 @@ export function HeroCarousel() {
           {heroMeta || "\u00A0"}
         </p>
 
-        <div className="mt-4 h-[2px] w-10 rounded-full bg-rose/40" />
+        <div className="mt-3 h-[2px] w-10 rounded-full bg-rose/40 sm:mt-4" />
 
         {/* Descrição */}
         <p
           className="
-            mt-4
+            mt-4 hidden
             max-w-lg
-            line-clamp-2 min-h-12
+            min-h-12
             text-sm leading-6
             text-ink-soft
-            sm:text-base
+            sm:line-clamp-2 sm:text-base
           "
         >
           {summarize(product.description)}
@@ -413,7 +414,7 @@ export function HeroCarousel() {
 
         {/* PREÇO */}
         {product.fromPriceCents !== null && (
-          <div className="mt-5 min-h-[4.5rem]">
+          <div className="mt-4 min-h-[4.25rem] sm:mt-5 sm:min-h-[4.5rem]">
             {product.variantCount > 1 && (
               <p className="mb-1 text-xs text-muted">
                 A partir de
@@ -431,14 +432,14 @@ export function HeroCarousel() {
         )}
 
         {/* BOTÕES */}
-        <div className="mt-6 flex flex-wrap items-center gap-3">
+        <div className="mt-5 grid grid-cols-2 items-center gap-3 sm:flex sm:flex-wrap lg:mt-6">
           <Link
             href={`/produto/${product.slug}`}
             className="
               inline-flex min-h-11
               items-center justify-center
               rounded-lg bg-rose
-              px-5
+              px-3 sm:px-5
               text-sm font-semibold
               text-white
               transition-all duration-200
@@ -460,7 +461,7 @@ export function HeroCarousel() {
               rounded-lg
               border border-line-strong
               bg-surface
-              px-5
+              px-3 sm:px-5
               text-sm font-semibold
               text-ink
               transition-all duration-200
@@ -474,7 +475,7 @@ export function HeroCarousel() {
 
         {/* INDICADORES */}
         {total > 1 && (
-          <div className="mt-6 flex items-center gap-2">
+          <div className="mt-4 flex items-center gap-2 lg:mt-6">
             {products.map((item, index) => (
               <button
                 key={item.id}

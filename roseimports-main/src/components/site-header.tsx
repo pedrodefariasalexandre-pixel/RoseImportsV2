@@ -58,13 +58,13 @@ export function SiteHeader() {
   return (
     <header className="sticky top-0 z-40 border-b border-line bg-ivory/95 backdrop-blur-md">
       <div className="bg-ink">
-        <p className="mx-auto max-w-7xl px-3 py-[11px] text-center text-[0.54rem] font-medium uppercase tracking-[0.1em] text-gold-soft sm:px-6 sm:text-xs sm:tracking-[0.16em] lg:px-8">
+        <p className="mx-auto max-w-7xl px-3 py-2 text-center text-[0.58rem] font-medium uppercase tracking-[0.1em] text-gold-soft sm:px-6 sm:py-2.5 sm:text-xs sm:tracking-[0.16em] lg:px-8">
           Rose Imports · perfumes e cosméticos
         </p>
       </div>
 
       <div className="bg-ivory">
-        <div className="mx-auto flex max-w-7xl items-center gap-3 px-4 py-4 sm:px-6 lg:px-8 xl:gap-5">
+        <div className="mx-auto flex max-w-7xl items-center gap-2 px-4 py-2.5 sm:gap-3 sm:px-6 sm:py-3 lg:px-8 lg:py-4 xl:gap-5">
           <button
             type="button"
             onClick={() => {
@@ -105,7 +105,7 @@ export function SiteHeader() {
           <Logo
             variant="mark"
             className="shrink-0"
-            imageClassName="!h-11 sm:!h-[52px]"
+            imageClassName="!h-9 sm:!h-11 lg:!h-[52px]"
           />
 
           <nav
@@ -131,9 +131,9 @@ export function SiteHeader() {
               aria-expanded={searchOpen}
               aria-controls="busca-recolhida"
               className="
-                hidden h-10 items-center justify-center gap-2 rounded-lg px-2.5
+                flex h-10 items-center justify-center gap-2 rounded-lg px-2.5
                 text-sm font-medium text-muted transition-colors duration-200
-                hover:bg-rose/10 hover:text-rose md:flex
+                hover:bg-rose/10 hover:text-rose
               "
             >
               <SearchIcon />
@@ -198,17 +198,6 @@ export function SiteHeader() {
         </div>
       </div>
 
-      <div className="border-t border-line bg-ivory px-4 pb-3 md:hidden">
-        <a
-          href={whatsappContactUrl()}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex min-h-10 w-full items-center justify-center rounded-full bg-rose px-4 text-xs font-semibold text-white transition-colors duration-200 hover:bg-rose-deep"
-        >
-          Falar no WhatsApp
-        </a>
-      </div>
-
       {searchOpen && (
         <div id="busca-recolhida" className="border-t border-line bg-ivory">
           <form
@@ -262,20 +251,6 @@ export function SiteHeader() {
               >
                 Falar no WhatsApp
               </a>
-            </li>
-
-            <li className="border-b border-line md:hidden">
-              <button
-                type="button"
-                onClick={() => {
-                  setMenuOpen(false);
-                  setSearchOpen(true);
-                }}
-                className="flex w-full items-center gap-3 py-3.5 text-left text-sm font-medium transition-colors hover:text-rose"
-              >
-                <SearchIcon />
-                Buscar
-              </button>
             </li>
 
             {NAV.map((item) => (
