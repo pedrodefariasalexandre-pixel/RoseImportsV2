@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 
 import { requireAdminUser } from "@/lib/auth/admin";
+import { isCouponCodeLocked } from "@/lib/coupons";
 import { createClient } from "@/lib/supabase/server";
 
 import {
@@ -48,6 +49,10 @@ function translateCouponError(message: string): string {
     return "Código fora do formato aceito: de 3 a 24 caracteres, entre letras, números e hífen.";
   }
 
+  if (message.includes("coupon_code_locked_after_use")) {
+    return "Este cupom já foi usado e o código não pode mais ser alterado. Crie um cupom novo para divulgar outro código.";
+  }
+
   if (message.includes("discount_percent")) {
     return "A porcentagem de desconto precisa ficar entre 1 e 100.";
   }
@@ -76,9 +81,9 @@ function readCouponForm(formData: FormData) {
   };
 }
 
-function toCouponRow(input: CouponInput) {
+function toCouponRow(input: CouponInput, includeCode = true) {
   return {
-    code: input.code,
+    ...(includeCode ? { code: input.code } : {}),
     discount_percent: input.discountPercent,
     influencer_id: input.influencerId,
     starts_at: input.startsAt,
@@ -131,13 +136,34 @@ export async function updateCoupon(
 
   const supabase = await requireAdmin();
 
+  const { data: currentCoupon, error: currentCouponError } = await supabase
+    .from("coupons")
+    .select("code, uses_reserved")
+    .eq("id", couponId)
+    .maybeSingle();
+
+  if (currentCouponError || !currentCoupon) {
+    return { ok: false, error: "Cupom não encontrado. Atualize a página." };
+  }
+
+  const codeLocked = isCouponCodeLocked(currentCoupon.uses_reserved);
+
+  if (codeLocked && parsed.data.code !== currentCoupon.code) {
+    return {
+      ok: false,
+      error:
+        "Este cupom já foi usado e o código não pode mais ser alterado. Crie um cupom novo para divulgar outro código.",
+    };
+  }
+
   /*
     Contador de uso nunca entra no update: quem mexe nele é a transação
-    do pedido. Editar um cupom não pode reescrever histórico de venda.
+    do pedido. Quando já há uso, o código também sai do update: ele passa
+    a identificar permanentemente aquele histórico.
   */
   const { error } = await supabase
     .from("coupons")
-    .update(toCouponRow(parsed.data))
+    .update(toCouponRow(parsed.data, !codeLocked))
     .eq("id", couponId);
 
   if (error) {

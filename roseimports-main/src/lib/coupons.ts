@@ -25,6 +25,11 @@ export function isValidCouponCode(input: string): boolean {
   return COUPON_CODE_REGEX.test(normalizeCouponCode(input));
 }
 
+/** O código passa a identificar o histórico assim que o primeiro uso entra. */
+export function isCouponCodeLocked(usesReserved: number): boolean {
+  return usesReserved > 0;
+}
+
 /**
  * Desconto em centavos. Arredonda meio para cima, igual ao round() do
  * Postgres, para a prévia da tela não divergir do valor gravado.

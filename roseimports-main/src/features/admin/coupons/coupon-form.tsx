@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
-import { normalizeCouponCode } from "@/lib/coupons";
+import { isCouponCodeLocked, normalizeCouponCode } from "@/lib/coupons";
 import type { Coupon, Influencer } from "@/types/database";
 
 import { createCoupon, updateCoupon } from "./actions";
@@ -41,6 +41,7 @@ export function CouponForm({
   influencers: InfluencerOption[];
 }) {
   const router = useRouter();
+  const codeLocked = isCouponCodeLocked(coupon?.uses_reserved ?? 0);
 
   const [code, setCode] = useState(coupon?.code ?? "");
   const [pending, startTransition] = useTransition();
@@ -74,7 +75,12 @@ export function CouponForm({
 
       setFeedback({ ok: true, text: result.message });
 
-      if (!coupon) router.push("/admin/cupons");
+      if (!coupon) {
+        router.push("/admin/cupons");
+      } else {
+        // Atualiza o cabeçalho e os contadores renderizados pelo servidor.
+        router.refresh();
+      }
     });
   }
 
@@ -87,8 +93,15 @@ export function CouponForm({
           <h3 className="text-sm font-medium text-ink">Cupom</h3>
 
           <p className="mt-1 text-xs text-muted">
-            O código é gravado em maiúsculas. Quem digitar “{code ? code.toLowerCase() : "duda10"}”
-            no checkout chega no mesmo cupom.
+            {codeLocked ? (
+              "Depois do primeiro uso, o código identifica permanentemente o histórico deste cupom."
+            ) : (
+              <>
+                O código é gravado em maiúsculas. Quem digitar “
+                {code ? code.toLowerCase() : "duda10"}” no checkout chega no
+                mesmo cupom.
+              </>
+            )}
           </p>
         </div>
 
@@ -105,15 +118,23 @@ export function CouponForm({
               required
               maxLength={24}
               value={code}
+              readOnly={codeLocked}
+              aria-describedby="code-help"
               onChange={(event) =>
                 setCode(normalizeCouponCode(event.target.value))
               }
               placeholder="DUDA10"
-              className="mt-2.5 w-full border border-line bg-surface px-4 py-3 text-sm tracking-[0.08em] uppercase focus:border-rose focus:outline-none"
+              className={`mt-2.5 w-full border border-line px-4 py-3 text-sm tracking-[0.08em] uppercase focus:border-rose focus:outline-none ${
+                codeLocked
+                  ? "cursor-not-allowed bg-ivory-deep text-muted"
+                  : "bg-surface"
+              }`}
             />
 
-            <p className="mt-2 text-xs text-muted">
-              De 3 a 24 caracteres: letras, números e hífen.
+            <p id="code-help" className="mt-2 text-xs text-muted">
+              {codeLocked
+                ? "Código bloqueado porque o cupom já foi usado. Para divulgar outro código, crie um cupom novo."
+                : "De 3 a 24 caracteres: letras, números e hífen."}
             </p>
           </div>
 
@@ -279,7 +300,7 @@ export function CouponForm({
 
       {feedback && (
         <p
-          role="alert"
+          role={feedback.ok ? "status" : "alert"}
           className={`border px-4 py-3 text-sm ${
             feedback.ok
               ? "border-success/30 bg-success/5 text-success"

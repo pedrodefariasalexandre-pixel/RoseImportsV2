@@ -84,6 +84,35 @@ export type BulkProductImportSummary = {
   unitsAdded: number;
 };
 
+export type BulkVariantActivationSummary = {
+  activeVariantsCreated: number;
+  inactiveVariantsCreated: number;
+};
+
+/**
+ * A RPC resume quantas variantes criou, mas a interface também precisa dizer
+ * quantas ficaram prontas para venda. Essa informação vem da decisão enviada
+ * no próprio lote; variantes adicionadas a produtos existentes seguem
+ * inativas para revisão manual.
+ */
+export function summarizeCreatedVariantActivation(
+  items: readonly Pick<ConfirmBulkProductImportItem, "action">[],
+  variantsCreated: number,
+): BulkVariantActivationSummary {
+  const requestedActive = items.filter(
+    (item) => item.action === "create_product_with_sale_data",
+  ).length;
+  const activeVariantsCreated = Math.min(variantsCreated, requestedActive);
+
+  return {
+    activeVariantsCreated,
+    inactiveVariantsCreated: Math.max(
+      0,
+      variantsCreated - activeVariantsCreated,
+    ),
+  };
+}
+
 type RpcResult = {
   data: unknown;
   error: { message: string } | null;

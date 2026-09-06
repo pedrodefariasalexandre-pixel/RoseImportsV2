@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   computeDiscountCents,
   couponAvailability,
+  isCouponCodeLocked,
   isValidCouponCode,
   normalizeCouponCode,
   type CouponWindow,
@@ -37,6 +38,14 @@ describe("normalizeCouponCode", () => {
     expect(isValidCouponCode("ab")).toBe(false);
     expect(isValidCouponCode("A".repeat(25))).toBe(false);
     expect(isValidCouponCode("DUDA@10")).toBe(false);
+  });
+});
+
+describe("isCouponCodeLocked", () => {
+  it("só bloqueia o código depois do primeiro uso", () => {
+    expect(isCouponCodeLocked(0)).toBe(false);
+    expect(isCouponCodeLocked(1)).toBe(true);
+    expect(isCouponCodeLocked(30)).toBe(true);
   });
 });
 

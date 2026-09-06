@@ -1,6 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { confirmBulkProductImport } from "./import-service";
+import {
+  confirmBulkProductImport,
+  summarizeCreatedVariantActivation,
+} from "./import-service";
 
 const request = {
   idempotencyKey: "30000000-0000-4000-8000-000000000001",
@@ -83,5 +86,23 @@ describe("confirmBulkProductImport", () => {
     expect(first).toEqual(storedSummary);
     expect(repeated).toEqual(storedSummary);
     expect(rpc.mock.calls[0]).toEqual(rpc.mock.calls[1]);
+  });
+});
+
+describe("summarizeCreatedVariantActivation", () => {
+  it("separa as variantes prontas para venda das que aguardam revisão", () => {
+    expect(
+      summarizeCreatedVariantActivation(
+        [
+          { action: "create_product_with_sale_data" },
+          { action: "create_product_with_sale_data" },
+          { action: "create_inactive_variant" },
+        ],
+        3,
+      ),
+    ).toEqual({
+      activeVariantsCreated: 2,
+      inactiveVariantsCreated: 1,
+    });
   });
 });

@@ -11,9 +11,16 @@ import {
   pageNumber,
   type SearchParams,
 } from "@/features/admin/pagination";
+import {
+  orderDateEndExclusive,
+  orderDateStart,
+  parseOrderDate,
+} from "@/features/admin/order-date-filter";
+import { OrderListFilters } from "@/features/admin/order-list-filters";
 import { formatCents } from "@/lib/money";
 import { formatDateTime } from "@/lib/format";
-import { FULFILLMENT_LABEL, ORDER_STATUS_LABEL, PAYMENT_LABEL } from "@/lib/labels";
+import { FULFILLMENT_LABEL, PAYMENT_LABEL } from "@/lib/labels";
+import { searchOrFilters } from "@/lib/search";
 import type { FulfillmentType, OrderStatus, PaymentMethod } from "@/types/database";
 
 export const metadata: Metadata = { title: "Pedidos" };
@@ -53,8 +60,25 @@ function parseStatus(value: string): OrderStatus | "" {
     : "";
 }
 
-/** Mesma URL, outro status: trocar de filtro sempre volta à página 1. */
-function filterHref(status: string): string {
+/** Preserva busca e período ao trocar a situação, sempre voltando à página 1. */
+function filterHref(params: SearchParams, status: string): string {
+  const next = new URLSearchParams();
+
+  for (const [key, value] of Object.entries(params)) {
+    const selected = first(value);
+    if (selected) next.set(key, selected);
+  }
+
+  next.delete("pagina");
+  if (status) next.set("status", status);
+  else next.delete("status");
+
+  const query = next.toString();
+  return query ? `${BASE_PATH}?${query}` : BASE_PATH;
+}
+
+/** Os cartões são totais globais; seus links também limpam os demais filtros. */
+function summaryHref(status: string): string {
   return status ? `${BASE_PATH}?status=${status}` : BASE_PATH;
 }
 
@@ -68,50 +92,75 @@ export default async function PedidosPage({
 
   const params = await searchParams;
 
+  const q = first(params.q).trim();
   const status = parseStatus(first(params.status));
+  const startDate = parseOrderDate(first(params.data_inicio));
+  const endDate = parseOrderDate(first(params.data_fim));
+  const invalidDateRange = Boolean(
+    startDate && endDate && startDate > endDate,
+  );
   const currentPage = pageNumber(params.pagina);
   const from = (currentPage - 1) * PAGE_SIZE;
 
   const supabase = await createClient();
 
-  let query = supabase
-    .from("orders")
-    .select(
-      // subtotal_cents saiu: a tabela mostra o total já com desconto.
-      "id, order_number, customer_name, fulfillment_type, neighborhood, payment_method, discount_cents, total_cents, coupon_code_snapshot, status, created_at",
-    )
+  const applyFilters = <
+    T extends {
+      or: (filters: string) => T;
+      eq: (column: string, value: string) => T;
+      gte: (column: string, value: string) => T;
+      lt: (column: string, value: string) => T;
+    },
+  >(
+    builder: T,
+  ): T => {
+    let next = builder;
+
+    for (const filter of searchOrFilters(q)) next = next.or(filter);
+    if (status) next = next.eq("status", status);
+    if (startDate) next = next.gte("created_at", orderDateStart(startDate));
+    if (endDate) {
+      next = next.lt("created_at", orderDateEndExclusive(endDate));
+    }
+
+    return next;
+  };
+
+  const countQuery = applyFilters(
+    supabase.from("orders").select("id", { count: "exact", head: true }),
+  );
+  const listQuery = applyFilters(
+    supabase
+      .from("orders")
+      .select(
+        // subtotal_cents saiu: a tabela mostra o total já com desconto.
+        "id, order_number, customer_name, fulfillment_type, neighborhood, payment_method, discount_cents, total_cents, coupon_code_snapshot, status, created_at",
+      ),
+  )
     .order("created_at", { ascending: false })
     .range(from, from + PAGE_SIZE - 1);
 
-  if (status) query = query.eq("status", status);
-
-  // Resumo e listagem não dependem um do outro: saem na mesma onda.
-  const [resumo, listagem] = await Promise.all([
+  // Resumo, total filtrado e linhas não dependem um do outro.
+  const [resumo, contagem, listagem] = await Promise.all([
     supabase.rpc("admin_order_status_counts").single(),
-    query,
+    countQuery,
+    listQuery,
   ]);
 
-  const error = resumo.error ?? listagem.error;
+  const countError = resumo.error ?? contagem.error;
   const counts = resumo.data;
-  const orders = listagem.data ?? [];
-
-  /*
-     O total da paginação sai do resumo, não de um `count: exact` na
-     listagem: a função já conta por status, e pedir a mesma conta duas
-     vezes na mesma renderização custava ~80ms sem devolver nada novo.
-  */
-  const total = counts ? (status ? counts[status] : counts.total) : orders.length;
+  const total = contagem.count ?? 0;
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
-  /*
-     Página além do fim — URL editada na mão, ou filtro que encolheu desde
-     o último carregamento. A listagem já voltou vazia; o que falta é a URL
-     apontar para uma página que existe, em vez de exibir "nenhum pedido"
-     numa loja cheia deles.
-  */
-  if (currentPage > totalPages) {
+  if (!countError && currentPage > totalPages) {
     redirect(pageHref(BASE_PATH, params, totalPages));
   }
+
+  const error = countError ?? listagem.error;
+  const orders = listagem.data ?? [];
+  const hasFilters = Boolean(q || status || startDate || endDate);
+  const firstVisible = total > 0 ? from + 1 : 0;
+  const lastVisible = total > 0 ? Math.min(from + orders.length, total) : 0;
 
   return (
     <div className="space-y-6">
@@ -159,36 +208,43 @@ export default async function PedidosPage({
           <SummaryItem
             label="Pedidos"
             value={counts.total}
-            href={filterHref("")}
+            href={summaryHref("")}
           />
 
           <SummaryItem
             label="Novos"
             value={counts.novo}
-            href={filterHref("novo")}
+            href={summaryHref("novo")}
           />
 
           <SummaryItem
             label="Em atendimento"
             value={counts.em_atendimento}
-            href={filterHref("em_atendimento")}
+            href={summaryHref("em_atendimento")}
           />
 
           <SummaryItem
             label="Pagos"
             value={counts.pago}
-            href={filterHref("pago")}
+            href={summaryHref("pago")}
           />
 
           <SummaryItem
             label="Cancelados"
             value={counts.cancelado}
-            href={filterHref("cancelado")}
+            href={summaryHref("cancelado")}
           />
         </section>
       )}
 
       {/* FILTROS */}
+
+      <OrderListFilters
+        query={q}
+        startDate={startDate}
+        endDate={endDate}
+        status={status}
+      />
 
       <nav className="flex flex-wrap gap-1.5" aria-label="Filtrar por status">
         {FILTERS.map((filter) => {
@@ -196,7 +252,7 @@ export default async function PedidosPage({
           return (
             <Link
               key={filter.label}
-              href={filterHref(filter.value)}
+              href={filterHref(params, filter.value)}
               aria-current={active ? "page" : undefined}
               className={`border px-3.5 py-2 text-xs tracking-[0.1em] uppercase transition-colors ${
                 active
@@ -216,14 +272,19 @@ export default async function PedidosPage({
         </p>
       )}
 
+      {invalidDateRange && !error && (
+        <p role="alert" className="text-sm text-danger">
+          A data inicial precisa ser anterior ou igual à data final.
+        </p>
+      )}
+
       {/* RESULTADO */}
 
-      {!error && status && (
-        <p className="text-xs text-muted">
-          {total === 1 ? "1 pedido" : `${total} pedidos`} com status{" "}
-          <span className="font-medium text-ink">
-            {ORDER_STATUS_LABEL[status]}
-          </span>
+      {!error && (
+        <p className="text-xs text-muted" aria-live="polite">
+          Exibindo {firstVisible}–{lastVisible} de {total}{" "}
+          {total === 1 ? "pedido" : "pedidos"}
+          {hasFilters ? " para os filtros selecionados" : " no total"}.
         </p>
       )}
 
@@ -305,23 +366,21 @@ export default async function PedidosPage({
 
           <div className="border border-line bg-surface px-5 py-14 text-center">
             <p className="text-sm font-medium text-ink">
-              {status
-                ? "Nenhum pedido com esse status"
-                : "Nenhum pedido ainda"}
+              {hasFilters ? "Nenhum pedido encontrado" : "Nenhum pedido ainda"}
             </p>
 
             <p className="mt-1 text-xs text-muted">
-              {status
-                ? `Nada em "${ORDER_STATUS_LABEL[status]}" no momento.`
+              {hasFilters
+                ? "Ajuste ou limpe a busca, o período e a situação."
                 : "Os pré-pedidos gerados pelo site aparecem aqui."}
             </p>
 
-            {status && (
+            {hasFilters && (
               <Link
                 href={BASE_PATH}
                 className="mt-4 inline-block text-xs font-medium text-rose hover:underline"
               >
-                Ver todos os pedidos
+                Limpar todos os filtros
               </Link>
             )}
           </div>

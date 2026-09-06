@@ -226,6 +226,11 @@ export type Order =
     total_cents: number;
   };
 
+/** Coluna gerada para a busca do painel, disponível apenas na leitura. */
+type OrderRow = Order & {
+  search_text: string;
+};
+
 export type OrderItem = {
   id: string;
 
@@ -414,9 +419,9 @@ export type Database = {
       product_images:
         Table<ProductImage>;
 
-      // total_cents é coluna gerada: o banco recusa escrita nela.
+      // total_cents e search_text são geradas: o banco recusa escrita nelas.
       orders: Table<
-        Order,
+        OrderRow,
         Partial<Omit<Order, "total_cents">>,
         Partial<Omit<Order, "total_cents">>
       >;

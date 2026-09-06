@@ -6,7 +6,11 @@ import { slugify } from "@/lib/slug";
 import { categorySlugForProductType } from "@/lib/product-category";
 
 import { analyzeBulkProducts, confirmBulkProducts } from "./actions";
-import type { BulkProductImportSummary } from "./import-service";
+import {
+  summarizeCreatedVariantActivation,
+  type BulkProductImportSummary,
+  type BulkVariantActivationSummary,
+} from "./import-service";
 import {
   buildBulkVariantLabel,
   normalizeBulkProductDisplayName,
@@ -42,6 +46,7 @@ const statusClasses = {
 } as const;
 
 type Feedback = { tone: "success" | "error" | "info"; message: string };
+type BulkImportResult = BulkProductImportSummary & BulkVariantActivationSummary;
 
 const inputClass =
   "mt-2 w-full rounded-sm border border-line bg-ivory px-3.5 py-2.5 text-sm text-ink outline-none transition placeholder:text-muted/70 focus:border-rose focus:ring-1 focus:ring-rose/10";
@@ -79,7 +84,7 @@ export function BulkProductImport() {
   >([]);
   const [showOnlyPending, setShowOnlyPending] = useState(false);
   const [feedback, setFeedback] = useState<Feedback | null>(null);
-  const [result, setResult] = useState<BulkProductImportSummary | null>(null);
+  const [result, setResult] = useState<BulkImportResult | null>(null);
   const [isPending, startTransition] = useTransition();
 
   const counts = useMemo(() => {
@@ -181,7 +186,13 @@ export function BulkProductImport() {
         return;
       }
 
-      setResult(response.summary);
+      setResult({
+        ...response.summary,
+        ...summarizeCreatedVariantActivation(
+          payload,
+          response.summary.variantsCreated,
+        ),
+      });
       setFeedback({ tone: "success", message: response.message });
     });
   }
@@ -410,10 +421,24 @@ export function BulkProductImport() {
             pendentes de revisão · {result.unitsAdded} unidades adicionadas ao
             estoque.
           </p>
-          <p className="mt-1 leading-relaxed">
-            {result.variantsCreated} novas variantes ficaram inativas e aguardam
-            definição de preço.
-          </p>
+          {result.activeVariantsCreated > 0 ? (
+            <p className="mt-1 leading-relaxed">
+              {result.activeVariantsCreated}{" "}
+              {result.activeVariantsCreated === 1
+                ? "nova versão ficou ativa"
+                : "novas versões ficaram ativas"}
+              , com preço e estoque informados.
+            </p>
+          ) : null}
+          {result.inactiveVariantsCreated > 0 ? (
+            <p className="mt-1 leading-relaxed">
+              {result.inactiveVariantsCreated}{" "}
+              {result.inactiveVariantsCreated === 1
+                ? "nova versão ficou inativa e aguarda"
+                : "novas versões ficaram inativas e aguardam"}{" "}
+              definição de preço.
+            </p>
+          ) : null}
         </section>
       ) : null}
     </div>
