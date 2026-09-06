@@ -34,7 +34,7 @@ export const GENDER_LABEL: Record<Gender, string> = {
 export const PRODUCT_TYPE_LABEL: Record<string, string> = {
   perfume: "Perfume",
   body_splash: "Body splash",
-  cosmetico: "Cosmético",
+  body_cream: "Body cream",
   eletronico: "Eletrônico",
   acessorio: "Acessório",
 };

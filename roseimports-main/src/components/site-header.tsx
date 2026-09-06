@@ -11,7 +11,8 @@ import { whatsappContactUrl } from "@/lib/whatsapp";
 
 const NAV = [
   { href: "/catalogo?categoria=perfumes", label: "Perfumes" },
-  { href: "/catalogo?categoria=cosmeticos", label: "Cosméticos" },
+  { href: "/catalogo?categoria=body-splash", label: "Body Splash" },
+  { href: "/catalogo?categoria=body-cream", label: "Body Cream" },
   { href: "/catalogo?genero=masculino", label: "Masculino" },
   { href: "/catalogo?genero=feminino", label: "Feminino" },
   { href: "/catalogo", label: "Todos" },
@@ -59,7 +60,7 @@ export function SiteHeader() {
     <header className="sticky top-0 z-40 border-b border-line bg-ivory/95 backdrop-blur-md">
       <div className="bg-ink">
         <p className="mx-auto max-w-7xl px-3 py-2 text-center text-[0.58rem] font-medium uppercase tracking-[0.1em] text-gold-soft sm:px-6 sm:py-2.5 sm:text-xs sm:tracking-[0.16em] lg:px-8">
-          Rose Imports · perfumes e cosméticos
+          Rose Imports · perfumes e cuidados corporais
         </p>
       </div>
 

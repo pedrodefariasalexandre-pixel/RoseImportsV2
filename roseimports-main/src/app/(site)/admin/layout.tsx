@@ -7,14 +7,7 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-/**
- * O painel vive dentro do site: header, rodapé e tipografia vêm do layout
- * público. Aqui só entram a subnavegação e a checagem de permissão.
- *
- * Sem perfil de administrador, nada do painel é renderizado — nem a nav.
- * As páginas públicas de autenticação compartilham este layout e aparecem
- * sem navegação quando ainda não há uma sessão de administrador.
- */
+/** O admin usa uma estrutura própria, sem navegação de compra. */
 export default async function AdminLayout({
   children,
 }: {
@@ -22,12 +15,14 @@ export default async function AdminLayout({
 }) {
   const admin = await getAdminUser();
 
-  if (!admin) return <>{children}</>;
-
   return (
     <>
-      <AdminNav userName={admin.name} />
-      <div className="mx-auto max-w-6xl px-5 py-8">{children}</div>
+      <AdminNav userName={admin?.name ?? null} />
+      {admin ? (
+        <div className="mx-auto max-w-6xl px-5 py-8">{children}</div>
+      ) : (
+        children
+      )}
     </>
   );
 }

@@ -9,7 +9,8 @@ import type { BulkProductCreationImportItem } from "./import-service";
 
 export type BulkCategoryIds = {
   perfumes: string | null;
-  cosmeticos: string | null;
+  "body-splash": string | null;
+  "body-cream": string | null;
 };
 
 export const BULK_PRODUCT_FIXED_PRICE_CENTS = 30_000;

@@ -75,7 +75,8 @@ export function BulkProductImport() {
   const [items, setItems] = useState<EditableBulkProduct[]>([]);
   const [categoryIds, setCategoryIds] = useState<BulkCategoryIds>({
     perfumes: null,
-    cosmeticos: null,
+    "body-splash": null,
+    "body-cream": null,
   });
   const [idempotencyKey, setIdempotencyKey] = useState("");
   const [confirmationAvailable, setConfirmationAvailable] = useState(false);
@@ -641,8 +642,11 @@ function ProductCard({
                 {expectedCategory === "perfumes" ? (
                   <option value="perfumes">Perfumes</option>
                 ) : null}
-                {expectedCategory === "cosmeticos" ? (
-                  <option value="cosmeticos">Cosméticos</option>
+                {expectedCategory === "body-splash" ? (
+                  <option value="body-splash">Body Splash</option>
+                ) : null}
+                {expectedCategory === "body-cream" ? (
+                  <option value="body-cream">Body Cream</option>
                 ) : null}
               </select>
               <p className="mt-1.5 text-xs leading-relaxed text-muted">
@@ -682,7 +686,7 @@ function ProductCard({
                 <option value="">Escolha o tipo</option>
                 <option value="perfume">Perfume</option>
                 <option value="body_splash">Body splash</option>
-                <option value="cosmetico">Cosmético</option>
+                <option value="body_cream">Body cream</option>
               </select>
             </FormField>
             ) : null}
@@ -1080,7 +1084,7 @@ function QuickRequiredFields({
             <option value="">Escolha o tipo</option>
             <option value="perfume">Perfume</option>
             <option value="body_splash">Body splash</option>
-            <option value="cosmetico">Cosmético</option>
+            <option value="body_cream">Body cream</option>
           </select>
         </FormField>
       ) : null}
@@ -1104,8 +1108,11 @@ function QuickRequiredFields({
             {expectedCategory === "perfumes" ? (
               <option value="perfumes">Perfumes</option>
             ) : null}
-            {expectedCategory === "cosmeticos" ? (
-              <option value="cosmeticos">Cosméticos</option>
+            {expectedCategory === "body-splash" ? (
+              <option value="body-splash">Body Splash</option>
+            ) : null}
+            {expectedCategory === "body-cream" ? (
+              <option value="body-cream">Body Cream</option>
             ) : null}
           </select>
         </FormField>

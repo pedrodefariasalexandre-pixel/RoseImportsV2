@@ -23,7 +23,7 @@ const requiredFieldsMigration = readFileSync(
 const categoryRuleMigration = readFileSync(
   resolve(
     process.cwd(),
-    "supabase/migrations/0014_categoria_body_splash_como_perfume.sql",
+    "supabase/migrations/0020_categorias_body_splash_e_body_cream.sql",
   ),
   "utf8",
 );
@@ -31,6 +31,13 @@ const saleDataMigration = readFileSync(
   resolve(
     process.cwd(),
     "supabase/migrations/0015_cadastro_lote_preco_estoque.sql",
+  ),
+  "utf8",
+);
+const bodyCreamTypeMigration = readFileSync(
+  resolve(
+    process.cwd(),
+    "supabase/migrations/0021_tipo_body_cream.sql",
   ),
   "utf8",
 );
@@ -79,12 +86,30 @@ describe("migration de cadastro em lote", () => {
     expect(categoryMigration).toContain("v_category_active is distinct from true");
   });
 
-  it("reserva cosméticos ao tipo cosmético e aceita body splash em perfumes", () => {
+  it("cria categorias próprias para body splash e body cream", () => {
     expect(categoryRuleMigration).toContain(
-      "when new.product_type in ('perfume', 'body_splash') then 'perfumes'",
+      "('Body Splash', 'body-splash', true, 2)",
     );
     expect(categoryRuleMigration).toContain(
-      "when new.product_type = 'cosmetico' then 'cosmeticos'",
+      "('Body Cream',  'body-cream',  true, 3)",
+    );
+    expect(categoryRuleMigration).toContain(
+      "when new.product_type = 'body_splash' then 'body-splash'",
+    );
+    expect(categoryRuleMigration).toContain(
+      "when new.product_type = 'cosmetico' then 'body-cream'",
+    );
+  });
+
+  it("substitui o tipo cosmético por body cream sem perder produtos", () => {
+    expect(bodyCreamTypeMigration).toContain(
+      "set product_type = 'body_cream'",
+    );
+    expect(bodyCreamTypeMigration).toContain(
+      "when new.product_type = 'body_cream' then 'body-cream'",
+    );
+    expect(bodyCreamTypeMigration).toContain(
+      "execute replace(v_definition, '''cosmetico''', '''body_cream''')",
     );
   });
 

@@ -145,7 +145,9 @@ export function CatalogFilters({ categories, families }: Props) {
           allLabel="Todos"
         />
 
-        {(!categoria || categoria === "perfumes") && (
+        {(!categoria ||
+          categoria === "perfumes" ||
+          categoria === "body-splash") && (
           <Select
             label="Família olfativa"
             value={familia}

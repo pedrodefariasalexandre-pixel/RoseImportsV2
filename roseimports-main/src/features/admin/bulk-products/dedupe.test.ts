@@ -105,7 +105,7 @@ describe("analyzeBulkProductRecords", () => {
     });
   });
 
-  it("não confunde perfume com cosmético ou body splash da mesma linha", () => {
+  it("não confunde perfume com body cream ou body splash da mesma linha", () => {
     const parsed = parseBulkProducts(`
       CREMES CORPORAIS
       1 LATTAFA JASOOR BODY CREAM, 100 ML, MASCULINO

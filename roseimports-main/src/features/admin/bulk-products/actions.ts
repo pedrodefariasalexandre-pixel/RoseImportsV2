@@ -51,7 +51,8 @@ export type AnalyzeBulkProductsResult =
       items: BulkProductAnalysisWithCategory[];
       categoryIds: {
         perfumes: string | null;
-        cosmeticos: string | null;
+        "body-splash": string | null;
+        "body-cream": string | null;
       };
       confirmationAvailable: boolean;
       schemaMode: "full" | "legacy";
@@ -183,7 +184,8 @@ export async function analyzeBulkProducts(
     items: analyses,
     categoryIds: {
       perfumes: categoryBySlug.get("perfumes") ?? null,
-      cosmeticos: categoryBySlug.get("cosmeticos") ?? null,
+      "body-splash": categoryBySlug.get("body-splash") ?? null,
+      "body-cream": categoryBySlug.get("body-cream") ?? null,
     },
     confirmationAvailable: catalogResult.mode === "full",
     schemaMode: catalogResult.mode,

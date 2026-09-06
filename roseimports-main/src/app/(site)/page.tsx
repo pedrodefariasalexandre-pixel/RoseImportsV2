@@ -167,9 +167,9 @@ export default async function HomePage() {
             </div>
           </Link>
 
-          {/* COSMÉTICOS */}
+          {/* BODY CREAM */}
           <Link
-            href="/catalogo?categoria=cosmeticos"
+            href="/catalogo?categoria=body-cream"
             className="
               group relative
               min-h-[300px]
@@ -206,16 +206,16 @@ export default async function HomePage() {
 
             <div className="absolute inset-x-0 bottom-0 p-6 sm:p-7">
               <p className="text-xs font-semibold text-rose-soft">
-                Beleza & cuidados
+                Hidratação perfumada
               </p>
 
               <h3 className="mt-1 text-2xl font-bold text-white">
-                Skincare
+                Body Cream
               </h3>
 
               <p className="mt-2 max-w-md text-sm leading-6 text-white/80">
-                Cuidados, ativos e tecnologia para deixar sua rotina
-                de beleza ainda mais completa.
+                Cremes corporais com fragrâncias marcantes para completar
+                sua rotina de cuidados.
               </p>
 
               <span
@@ -226,7 +226,7 @@ export default async function HomePage() {
                   group-hover:gap-3
                 "
               >
-                Explorar cosméticos
+                Explorar body creams
                 <span aria-hidden>→</span>
               </span>
             </div>

@@ -32,7 +32,7 @@ export type OrderStatus =
 export type ProductType =
   | "perfume"
   | "body_splash"
-  | "cosmetico";
+  | "body_cream";
 
 export type Gender =
   | "feminino"

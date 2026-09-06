@@ -9,6 +9,7 @@ import { slugify } from "@/lib/slug";
 import { normalizeProductName } from "@/lib/product-name";
 import { categorySlugForProductType } from "@/lib/product-category";
 import { shouldShowProductDisplaySettings } from "@/features/admin/product-display-settings";
+import { UnsavedChangesGuard } from "@/features/admin/unsaved-changes-guard";
 import type {
   Category,
   OlfactoryFamily,
@@ -56,6 +57,9 @@ export function ProductForm({
   const [pending, startTransition] =
     useTransition();
 
+  const [dirty, setDirty] =
+    useState(false);
+
   const [feedback, setFeedback] =
     useState<{
       ok: boolean;
@@ -92,6 +96,7 @@ export function ProductForm({
     formData: FormData,
   ) {
     setFeedback(null);
+    setDirty(false);
 
     startTransition(async () => {
       const result = product
@@ -116,8 +121,12 @@ export function ProductForm({
           : {
               ok: false,
               text: result.error,
-            },
+          },
       );
+
+      if (!result.ok) {
+        setDirty(true);
+      }
     });
   }
 
@@ -126,10 +135,14 @@ export function ProductForm({
     productType === "body_splash";
 
   return (
-    <form
-      action={handleSubmit}
-      className="space-y-8"
-    >
+    <>
+      <UnsavedChangesGuard enabled={dirty} />
+
+      <form
+        action={handleSubmit}
+        onChange={() => setDirty(true)}
+        className="space-y-8"
+      >
       {/* INFORMAÇÕES PRINCIPAIS */}
 
       <div>
@@ -273,8 +286,8 @@ export function ProductForm({
                 Body splash
               </option>
 
-              <option value="cosmetico">
-                Cosmético
+              <option value="body_cream">
+                Body cream
               </option>
             </select>
           </Field>
@@ -358,7 +371,7 @@ export function ProductForm({
           )}
 
           {/*
-           * Se for cosmético, enviamos
+           * Se for body cream, enviamos
            * família vazia.
            */}
           {!usesOlfactoryFamily && (
@@ -519,10 +532,16 @@ export function ProductForm({
       {/* AÇÃO */}
 
       <div className="flex flex-col gap-3 border-t border-line pt-7 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-xs text-muted">
-          {product
-            ? "Salve para aplicar as alterações."
-            : "Depois continuaremos para preço, estoque e imagens."}
+        <p
+          className={`text-xs ${dirty ? "font-medium text-rose" : "text-muted"}`}
+          role="status"
+          aria-live="polite"
+        >
+          {dirty
+            ? "Alterações não salvas."
+            : product
+              ? "Salve para aplicar as alterações."
+              : "Depois continuaremos para preço, estoque e imagens."}
         </p>
 
         <button
@@ -549,7 +568,8 @@ export function ProductForm({
               : "Salvar e continuar →"}
         </button>
       </div>
-    </form>
+      </form>
+    </>
   );
 }
 

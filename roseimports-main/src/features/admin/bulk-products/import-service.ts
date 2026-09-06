@@ -3,7 +3,7 @@ type RequiredImportProductFields = {
   slug: string;
   brand: string;
   categoryId: string;
-  productType: "perfume" | "body_splash" | "cosmetico";
+  productType: "perfume" | "body_splash" | "body_cream";
   gender: "feminino" | "masculino" | "unissex";
 };
 

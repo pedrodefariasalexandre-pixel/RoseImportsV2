@@ -5,7 +5,8 @@ import { whatsappContactUrl } from "@/lib/whatsapp";
 
 const CATALOG = [
   ["Perfumes", "/catalogo?categoria=perfumes"],
-  ["Cosméticos", "/catalogo?categoria=cosmeticos"],
+  ["Body Splash", "/catalogo?categoria=body-splash"],
+  ["Body Cream", "/catalogo?categoria=body-cream"],
   ["Todos os produtos", "/catalogo"],
 ] as const;
 

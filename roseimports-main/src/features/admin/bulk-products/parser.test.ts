@@ -204,7 +204,7 @@ describe("parseBulkProducts", () => {
     expect(
       normalizeBulkProductDisplayName(
         "BODY CREAM DELILAH BLANC",
-        "cosmetico",
+        "body_cream",
       ),
     ).toBe("DELILAH BLANC BODY CREAM");
   });
@@ -389,7 +389,7 @@ describe("parseBulkProducts", () => {
 
     expect(records.map((record) => record.productType)).toEqual([
       "body_splash",
-      "cosmetico",
+      "body_cream",
       "perfume",
     ]);
     expect(records.map((record) => record.name)).toEqual([
@@ -415,17 +415,17 @@ describe("parseBulkProducts", () => {
       name: "ATHEERI - ABELHA BODY SPLASH",
       quantity: 6,
       productType: "body_splash",
-      categorySlug: "perfumes",
+      categorySlug: "body-splash",
     });
     expect(records[1]).toMatchObject({
       name: "ROYAL AMBER BODY CREAM",
       quantity: 2,
-      productType: "cosmetico",
-      categorySlug: "cosmeticos",
+      productType: "body_cream",
+      categorySlug: "body-cream",
     });
   });
 
-  it("reserva cosméticos aos body creams e classifica todo o restante como perfume", () => {
+  it("separa perfumes, body splashes e body creams", () => {
     const records = parseBulkProducts(`
       BODY SPLASH, BODY MIST E DESODORANTES
       1 BODY SPLASH ATHEERI
@@ -440,8 +440,8 @@ describe("parseBulkProducts", () => {
     `);
 
     expect(records.map((record) => record.categorySlug)).toEqual([
-      "perfumes",
-      "cosmeticos",
+      "body-splash",
+      "body-cream",
       "perfumes",
       "perfumes",
       "perfumes",
@@ -474,8 +474,9 @@ describe("parseBulkProducts", () => {
       ),
     ).toMatchObject({ volumeMl: 5, variantType: "decant" });
     expect(categoryCounts).toEqual({
-      perfumes: 83,
-      cosmeticos: 11,
+      "body-splash": 12,
+      "body-cream": 11,
+      perfumes: 71,
     });
   });
 
@@ -556,7 +557,7 @@ describe("parseBulkProducts", () => {
       name: "ATHEERI - ABELHA BODY SPLASH",
       quantity: 6,
       productType: "body_splash",
-      categorySlug: "perfumes",
+      categorySlug: "body-splash",
     });
     expect(records[1]).toMatchObject({
       name: "DELILAH BLANC/DELILAH POUR FEMME",
@@ -587,7 +588,7 @@ describe("parseBulkProducts", () => {
       quantity: 6,
       volumeMl: 300,
       productType: "body_splash",
-      categorySlug: "perfumes",
+      categorySlug: "body-splash",
     });
     expect(records[1]).toMatchObject({
       name: "KIT DE MINIATURAS LATTAFA PRIDE FEMININO",

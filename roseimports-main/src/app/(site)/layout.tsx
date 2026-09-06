@@ -1,6 +1,7 @@
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { FooterSlot } from "@/components/footer-slot";
+import { HeaderSlot } from "@/components/header-slot";
 
 export default function SiteLayout({
   children,
@@ -9,7 +10,9 @@ export default function SiteLayout({
 }) {
   return (
     <div className="flex min-h-screen flex-col font-sans antialiased">
-      <SiteHeader />
+      <HeaderSlot>
+        <SiteHeader />
+      </HeaderSlot>
 
       <main className="flex-1">
         {children}

@@ -162,7 +162,7 @@ export const productSchema = z.object({
   productType: z.enum([
     "perfume",
     "body_splash",
-    "cosmetico",
+    "body_cream",
   ]),
 
   gender: z.preprocess(

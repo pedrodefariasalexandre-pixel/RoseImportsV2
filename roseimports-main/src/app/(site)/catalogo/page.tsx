@@ -16,7 +16,7 @@ import { parseCatalogSort, parsePriceParam } from "@/features/catalog/sorting";
 export const metadata: Metadata = {
   title: "Catálogo",
   description:
-    "Perfumes, body splash e cosméticos importados disponíveis na Rose Imports.",
+    "Perfumes, body splashes e body creams importados disponíveis na Rose Imports.",
 };
 
 type SearchParams = Promise<
@@ -209,7 +209,7 @@ export default async function CatalogoPage({
         </h1>
 
         <p className="mt-3 text-sm leading-6 text-muted sm:text-base">
-          Encontre perfumes, body splash e cosméticos selecionados pela
+          Encontre perfumes, body splashes e body creams selecionados pela
           Rose Imports.
         </p>
       </header>

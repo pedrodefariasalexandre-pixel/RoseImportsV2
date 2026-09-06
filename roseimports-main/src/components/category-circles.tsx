@@ -9,10 +9,10 @@ const ITEMS = [
     alt: "Perfumes árabes importados",
   },
   {
-    label: "Cosméticos",
-    href: "/catalogo?categoria=cosmeticos",
+    label: "Body Cream",
+    href: "/catalogo?categoria=body-cream",
     image: "/categorias/rose-categoria-cosmeticos.png.png",
-    alt: "Cosméticos e skincare",
+    alt: "Cremes corporais importados",
   },
   {
     label: "Masculino",

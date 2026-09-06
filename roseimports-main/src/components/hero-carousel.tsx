@@ -134,7 +134,7 @@ export function HeroCarousel() {
               sm:text-4xl
             "
           >
-            Perfumes e cosméticos  importados.
+            Perfumes e cuidados corporais importados.
           </h1>
 
           <p

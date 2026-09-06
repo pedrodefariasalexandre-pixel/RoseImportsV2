@@ -6,7 +6,25 @@ import { useCart } from "@/features/cart/cart-context";
 import { StockBadge } from "@/components/stock-badge";
 import { formatCents } from "@/lib/money";
 import { delivery } from "@/lib/config/site";
-import type { ProductDetail } from "@/features/catalog/queries";
+import { PRODUCT_TYPE_LABEL } from "@/lib/labels";
+import type {
+  ProductDetail,
+  ProductVariantPublic,
+} from "@/features/catalog/queries";
+
+function variantDisplayLabel(
+  variant: ProductVariantPublic,
+  productType: ProductDetail["productType"],
+) {
+  if (!variant.volumeMl) return variant.label;
+
+  const typeLabel =
+    variant.variantType === "decant"
+      ? "Decant"
+      : (PRODUCT_TYPE_LABEL[productType] ?? "Produto");
+
+  return `${typeLabel} ${variant.volumeMl} ml`;
+}
 
 export function VariantSelector({
   product,
@@ -53,7 +71,7 @@ export function VariantSelector({
         productId: product.id,
         slug: product.slug,
         productName: product.name,
-        variantLabel: selected.label,
+        variantLabel: variantDisplayLabel(selected, product.productType),
         priceCents: selected.priceCents,
         imagePath: coverPath,
         maxQuantity: selected.maxQuantity,
@@ -84,6 +102,10 @@ export function VariantSelector({
           {product.variants.map((variant) => {
             const soldOut = variant.maxQuantity <= 0;
             const isSelected = variant.id === selectedId;
+            const displayLabel = variantDisplayLabel(
+              variant,
+              product.productType,
+            );
 
             return (
               <button
@@ -91,16 +113,30 @@ export function VariantSelector({
                 type="button"
                 onClick={() => setSelectedId(variant.id)}
                 aria-pressed={isSelected}
-                className={`min-w-24 border px-4 py-2.5 text-left transition-colors ${
+                className={`min-h-12 min-w-[10rem] rounded-md border px-4 py-3 text-left transition-all ${
                   isSelected
-                    ? "border-rose bg-rose-wash"
-                    : "border-line bg-surface hover:border-line-strong"
+                    ? "border-rose bg-surface shadow-[inset_0_0_0_1px_var(--color-rose)]"
+                    : "border-line bg-surface hover:border-rose-soft"
                 } ${soldOut ? "opacity-55" : ""}`}
               >
-                <span className="block text-sm">{variant.label}</span>
-                <span className="mt-0.5 block text-xs text-muted">
-                  {soldOut ? "Esgotado" : formatCents(variant.priceCents)}
+                <span className="flex items-center justify-between gap-4">
+                  <span className="text-sm font-semibold text-ink">
+                    {displayLabel}
+                  </span>
+                  <span
+                    aria-hidden
+                    className={`h-2.5 w-2.5 shrink-0 rounded-full border ${
+                      isSelected
+                        ? "border-rose bg-rose"
+                        : "border-line-strong bg-surface"
+                    }`}
+                  />
                 </span>
+                {(product.variants.length > 1 || soldOut) && (
+                  <span className="mt-1 block text-xs text-muted">
+                    {soldOut ? "Esgotado" : formatCents(variant.priceCents)}
+                  </span>
+                )}
               </button>
             );
           })}
@@ -206,7 +242,9 @@ export function VariantSelector({
         <div className="fixed inset-x-0 bottom-0 z-50 border-t border-line bg-surface/95 px-4 pt-3 shadow-[0_-10px_30px_rgba(25,20,19,0.10)] backdrop-blur-md pb-[max(0.75rem,env(safe-area-inset-bottom))] lg:hidden">
           <div className="mx-auto flex max-w-xl items-center gap-3">
             <div className="min-w-0 flex-1">
-              <p className="truncate text-xs text-muted">{selected.label}</p>
+              <p className="truncate text-xs text-muted">
+                {variantDisplayLabel(selected, product.productType)}
+              </p>
               <p className="text-base font-semibold">
                 {formatCents(selected.priceCents)}
               </p>

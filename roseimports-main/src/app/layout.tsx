@@ -34,7 +34,7 @@ export const metadata: Metadata = {
         url: socialImage,
         width: 1536,
         height: 864,
-        alt: "Rose Imports — Perfumes e cosméticos importados",
+        alt: "Rose Imports — Perfumes e cuidados corporais importados",
       },
     ],
   },

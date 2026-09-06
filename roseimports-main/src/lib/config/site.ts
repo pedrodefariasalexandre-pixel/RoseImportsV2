@@ -1,8 +1,8 @@
 export const site = {
   name: "Rose Imports",
-  tagline: "Perfumes e cosméticos importados",
+  tagline: "Perfumes e cuidados corporais importados",
   description:
-    "Perfumes, body splash e cosméticos importados na Rose Imports. Consulte disponibilidade, monte seu pedido e finalize o atendimento pelo WhatsApp.",
+    "Perfumes, body splashes e body creams importados na Rose Imports. Consulte disponibilidade, monte seu pedido e finalize o atendimento pelo WhatsApp.",
   url: "https://roseimports.com.br",
   locale: "pt-BR",
   timezone: "America/Sao_Paulo",
@@ -71,7 +71,7 @@ export const faq = [
 
 export const about = {
   intro:
-    "A Rose Imports reúne perfumes, body splash e cosméticos em uma experiência de compra simples, direta e próxima.",
+    "A Rose Imports reúne perfumes, body splashes e body creams em uma experiência de compra simples, direta e próxima.",
   body: [
     "A proposta da loja é facilitar a escolha: informações essenciais, fotos claras e atendimento para concluir cada pedido com segurança.",
     "A vitrine foi pensada para deixar produtos, versões e disponibilidade fáceis de encontrar, com atendimento próximo para ajudar quando necessário.",

@@ -48,7 +48,8 @@ function analysis(
 
 const categoryIds = {
   perfumes: "90000000-0000-4000-8000-000000000001",
-  cosmeticos: "90000000-0000-4000-8000-000000000002",
+  "body-splash": "90000000-0000-4000-8000-000000000002",
+  "body-cream": "90000000-0000-4000-8000-000000000003",
 };
 
 describe("modelo da revisão do cadastro em lote", () => {
@@ -372,6 +373,8 @@ describe("modelo da revisão do cadastro em lote", () => {
         name: "V.V. LOVE ETHEREAL MUSE",
         brand: "V.V. Love",
         productType: "body_splash",
+        categorySlug: "body-splash",
+        categoryId: categoryIds["body-splash"],
         volumeMl: 250,
       }),
       analysis({
@@ -379,9 +382,9 @@ describe("modelo da revisão do cadastro em lote", () => {
         sourceLine: 2,
         name: "DELILAH BLANC",
         brand: "Isabelle La Belle",
-        productType: "cosmetico",
-        categorySlug: "cosmeticos",
-        categoryId: categoryIds.cosmeticos,
+        productType: "body_cream",
+        categorySlug: "body-cream",
+        categoryId: categoryIds["body-cream"],
         volumeMl: 200,
       }),
     ]);
@@ -395,7 +398,7 @@ describe("modelo da revisão do cadastro em lote", () => {
     expect(payload[1]).toMatchObject({
       name: "DELILAH BLANC BODY CREAM",
       slug: "delilah-blanc-body-cream",
-      productType: "cosmetico",
+      productType: "body_cream",
     });
   });
 

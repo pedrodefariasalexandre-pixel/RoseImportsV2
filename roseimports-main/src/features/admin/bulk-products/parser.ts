@@ -2,9 +2,12 @@ import { slugify } from "../../../lib/slug";
 import { normalizeProductName } from "../../../lib/product-name";
 import { categorySlugForProductType } from "../../../lib/product-category";
 
-export type BulkProductType = "perfume" | "body_splash" | "cosmetico";
+export type BulkProductType = "perfume" | "body_splash" | "body_cream";
 
-export type BulkProductCategorySlug = "perfumes" | "cosmeticos";
+export type BulkProductCategorySlug =
+  | "perfumes"
+  | "body-splash"
+  | "body-cream";
 
 export type BulkProductConcentration = "EDP" | "EDT" | "Parfum";
 
@@ -42,7 +45,7 @@ export type ParsedBulkProduct = {
   duplicateOfIndex?: number;
 };
 
-type Section = "body_splash" | "cosmetico" | "kit" | "perfume";
+type Section = "body_splash" | "body_cream" | "kit" | "perfume";
 
 const BRANDS = [
   "Victoria's Secret",
@@ -69,7 +72,7 @@ const BRANDS = [
 
 const SECTION_BY_HEADING: Record<string, Section> = {
   "body splash body mist e desodorantes": "body_splash",
-  "cremes corporais": "cosmetico",
+  "cremes corporais": "body_cream",
   kits: "kit",
   perfumes: "perfume",
   "miniaturas onlyou": "perfume",
@@ -437,7 +440,7 @@ function readProductNameForm(
   if (/\b(?:perfuming\s+)?body\s+lotion\b|\blo[cç][aã]o\s+corporal\b/i.test(description)) {
     return "BODY LOTION";
   }
-  if (/\bbody\s+cream\b/i.test(description) || section === "cosmetico") {
+  if (/\bbody\s+cream\b/i.test(description) || section === "body_cream") {
     return "BODY CREAM";
   }
   if (
@@ -624,9 +627,9 @@ function readProductType(
     return "body_splash";
   }
   if (/\b(?:body\s+cream|body\s+lotion|lo[cç][aã]o\s+corporal)\b/i.test(description)) {
-    return "cosmetico";
+    return "body_cream";
   }
-  if (section === "body_splash" || section === "cosmetico") return section;
+  if (section === "body_splash" || section === "body_cream") return section;
   if (
     section === "perfume" ||
     concentration ||

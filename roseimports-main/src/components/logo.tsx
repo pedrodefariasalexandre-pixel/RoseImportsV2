@@ -14,16 +14,18 @@ type Variant = "mark" | "full" | "type";
 
 export function Logo({
   variant = "mark",
+  href = "/",
   className = "",
   imageClassName = "",
 }: {
   variant?: Variant;
+  href?: string;
   className?: string;
   imageClassName?: string;
 }) {
   if (variant === "type") {
     return (
-      <Link href="/" className={`inline-flex flex-col ${className}`}>
+      <Link href={href} className={`inline-flex flex-col ${className}`}>
         <span
           className="font-display text-lg leading-none"
           style={{ letterSpacing: "0.14em" }}
@@ -39,9 +41,9 @@ export function Logo({
 
   return (
     <Link
-      href="/"
+      href={href}
       className={`inline-block transition-opacity hover:opacity-80 ${className}`}
-      aria-label="Rose Imports — página inicial"
+      aria-label={href === "/" ? "Rose Imports — página inicial" : "Painel Rose Imports"}
     >
       <Image
         src={isFull ? "/logo.png" : "/logo-mark.png"}
