@@ -38,8 +38,10 @@ export async function updateSession(request: NextRequest) {
   const path = request.nextUrl.pathname;
   const isAdminArea = path.startsWith("/admin");
   const isLoginPage = path === "/admin/login";
+  const isPublicAuthPage =
+    isLoginPage || path === "/admin/recuperar-senha";
 
-  if (isAdminArea && !isLoginPage && !user) {
+  if (isAdminArea && !isPublicAuthPage && !user) {
     const url = request.nextUrl.clone();
     url.pathname = "/admin/login";
     url.searchParams.set("next", path);

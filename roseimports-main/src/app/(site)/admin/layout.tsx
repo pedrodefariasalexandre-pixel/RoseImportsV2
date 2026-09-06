@@ -12,8 +12,8 @@ export const metadata: Metadata = {
  * público. Aqui só entram a subnavegação e a checagem de permissão.
  *
  * Sem perfil de administrador, nada do painel é renderizado — nem a nav.
- * A página de login compartilha este layout e precisa aparecer sem nav,
- * por isso ela é a única exceção.
+ * As páginas públicas de autenticação compartilham este layout e aparecem
+ * sem navegação quando ainda não há uma sessão de administrador.
  */
 export default async function AdminLayout({
   children,

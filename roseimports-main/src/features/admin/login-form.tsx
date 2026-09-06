@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
@@ -53,9 +54,17 @@ export function LoginForm() {
       </div>
 
       <div>
-        <label htmlFor="senha" className="eyebrow">
-          Senha
-        </label>
+        <div className="flex items-center justify-between gap-4">
+          <label htmlFor="senha" className="eyebrow">
+            Senha
+          </label>
+          <Link
+            href="/admin/recuperar-senha"
+            className="text-xs text-muted underline underline-offset-4 transition-colors hover:text-ink"
+          >
+            Alterar senha
+          </Link>
+        </div>
         <input
           id="senha"
           type="password"
