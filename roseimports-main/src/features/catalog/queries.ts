@@ -82,7 +82,7 @@ export type ProductCard = {
   imageAlt: string | null;
   images: { path: string; alt: string | null }[];
   variantCount: number;
-  /** Posição na vitrine definida no painel; nulo vai para o fim. */
+  /** Posição padrão no catálogo definida no painel; nulo vai para o fim. */
   showcaseOrder: number | null;
 };
 
@@ -210,7 +210,7 @@ export type CatalogFilters = {
 
 /**
  * Preço de referência do produto: o menor entre as versões ativas, que é
- * o mesmo `fromPriceCents` exibido no card. Vitrine, filtro e ordenação
+ * o mesmo `fromPriceCents` exibido no card. Catálogo, filtro e ordenação
  * usam este número — admin e loja não podem discordar sobre qual produto
  * é o mais barato.
  */
@@ -249,9 +249,9 @@ function byPrice(direction: 1 | -1) {
 }
 
 /**
- * Ordem da vitrine, definida arrastando os produtos no painel. Quem
+ * Ordem padrão do catálogo, definida arrastando os produtos no painel. Quem
  * ainda não foi posicionado vai para o fim, em ordem alfabética — é o
- * que faz produto novo entrar no fim da vitrine, nunca no começo.
+ * que faz produto novo entrar no fim do catálogo, nunca no começo.
  */
 function byShowcase(a: ProductCard, b: ProductCard) {
   const left = a.showcaseOrder;
@@ -606,7 +606,7 @@ export async function getOlfactoryFamilies(): Promise<OlfactoryFamily[]> {
 }
 
 /**
- * Produtos ativos na ordem da vitrine, para a tela de organização do
+ * Produtos ativos na ordem padrão do catálogo, para a tela de organização do
  * painel. Vem tudo de uma vez: a ordenação por arrastar não sobrevive
  * a paginação — a posição visível não corresponderia à posição real.
  */

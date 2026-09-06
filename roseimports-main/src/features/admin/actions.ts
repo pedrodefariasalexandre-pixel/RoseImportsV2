@@ -1456,7 +1456,7 @@ function translateDbError(
   return "Não foi possível concluir a operação. Tente de novo.";
 }
 /**
- * Grava a ordem da vitrine a partir da sequência arrastada no painel.
+ * Grava a ordem padrão do catálogo a partir da sequência arrastada no painel.
  *
  * A posição é o índice na lista, e a lista chega inteira — o painel não
  * pagina essa tela justamente para que a posição visível corresponda à
@@ -1503,14 +1503,13 @@ export async function saveShowcaseOrder(
 
   /*
      Só o catálogo espelha esta ordem. A Home sorteia os destaques a cada
-     visita, de propósito, e não consulta showcase_order — revalidá-la
-     aqui daria a entender que a vitrine a governa, e não governa.
+     visita, de propósito, e não consulta showcase_order.
   */
   revalidatePath("/admin/vitrine");
   revalidatePath("/catalogo");
 
   return {
     ok: true,
-    message: "Ordem da vitrine salva.",
+    message: "Ordem do catálogo salva.",
   };
 }

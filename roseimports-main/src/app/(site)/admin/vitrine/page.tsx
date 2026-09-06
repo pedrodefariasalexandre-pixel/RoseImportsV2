@@ -4,7 +4,7 @@ import { requireAdminUser } from "@/lib/auth/admin";
 import { ShowcaseOrder } from "@/features/admin/showcase-order";
 import { getShowcaseProducts } from "@/features/catalog/queries";
 
-export const metadata: Metadata = { title: "Vitrine" };
+export const metadata: Metadata = { title: "Ordem do catálogo" };
 export const dynamic = "force-dynamic";
 
 export default async function VitrinePage() {
@@ -18,7 +18,7 @@ export default async function VitrinePage() {
         <div>
           <p className="eyebrow">Catálogo</p>
 
-          <h1 className="mt-1 text-2xl">Vitrine</h1>
+          <h1 className="mt-1 text-2xl">Ordem do catálogo</h1>
 
           <p className="mt-2 max-w-xl text-sm text-muted">
             Defina a ordem em que os produtos aparecem no catálogo. É essa
@@ -38,7 +38,7 @@ export default async function VitrinePage() {
             transition hover:border-ink
           "
         >
-          Ver vitrine
+          Ver catálogo
         </Link>
       </header>
 

@@ -8,7 +8,7 @@ import { formatCents } from "@/lib/money";
 import { normalizeSearchText } from "@/lib/search";
 
 /* ---------------------------------------------------------------
-   Organização da vitrine.
+   Organização da ordem padrão do catálogo.
 
    Arrastar usa a API nativa do navegador — nenhuma biblioteca nova
    entra no projeto por causa desta tela. Como nem todo mundo arrasta
@@ -137,7 +137,7 @@ export function ShowcaseOrder({ products }: { products: ProductCard[] }) {
             </button>
           </>
         ) : (
-          "Arraste os produtos na lista abaixo para definir a ordem exibida na vitrine."
+          "Arraste os produtos para definir a ordem padrão do catálogo."
         )}
       </p>
 

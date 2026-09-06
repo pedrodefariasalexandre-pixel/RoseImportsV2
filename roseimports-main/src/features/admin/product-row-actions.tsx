@@ -9,6 +9,8 @@ import {
 } from "@/features/admin/actions";
 import { ConfirmDeleteButton } from "@/features/admin/confirm-delete-button";
 
+type Feedback = { ok: boolean; text: string } | null;
+
 export function ProductRowActions({
   productId,
   active,
@@ -19,7 +21,7 @@ export function ProductRowActions({
   featured: boolean;
 }) {
   const [pending, startTransition] = useTransition();
-  const [error, setError] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<Feedback>(null);
 
   return (
     <div className="flex flex-col items-end gap-1">
@@ -34,11 +36,21 @@ export function ProductRowActions({
         <button
           type="button"
           disabled={pending}
-          onClick={() =>
-            startTransition(() => {
-              void toggleProductFlag(productId, "featured", !featured);
-            })
-          }
+          onClick={() => {
+            setFeedback(null);
+            startTransition(async () => {
+              const result = await toggleProductFlag(
+                productId,
+                "featured",
+                !featured,
+              );
+              setFeedback(
+                result.ok
+                  ? { ok: true, text: result.message }
+                  : { ok: false, text: result.error },
+              );
+            });
+          }}
           className="text-xs tracking-[0.1em] text-muted uppercase hover:text-ink disabled:opacity-50"
         >
           {featured ? "Tirar destaque" : "Destacar"}
@@ -47,11 +59,17 @@ export function ProductRowActions({
         <button
           type="button"
           disabled={pending}
-          onClick={() =>
-            startTransition(() => {
-              void toggleProductActive(productId, !active);
-            })
-          }
+          onClick={() => {
+            setFeedback(null);
+            startTransition(async () => {
+              const result = await toggleProductActive(productId, !active);
+              setFeedback(
+                result.ok
+                  ? { ok: true, text: result.message }
+                  : { ok: false, text: result.error },
+              );
+            });
+          }}
           className="text-xs tracking-[0.1em] text-muted uppercase hover:text-ink disabled:opacity-50"
         >
           {active ? "Desativar" : "Ativar"}
@@ -61,14 +79,26 @@ export function ProductRowActions({
           idleLabel="Excluir"
           onConfirm={() => deleteProduct(productId)}
           onResult={(result) =>
-            setError(result.ok ? null : (result.error ?? "Não foi possível excluir."))
+            setFeedback(
+              result.ok
+                ? { ok: true, text: result.message ?? "Produto excluído." }
+                : {
+                    ok: false,
+                    text: result.error ?? "Não foi possível excluir.",
+                  },
+            )
           }
         />
       </div>
 
-      {error && (
-        <p role="alert" className="text-xs text-danger">
-          {error}
+      {feedback && (
+        <p
+          role={feedback.ok ? "status" : "alert"}
+          className={`max-w-xs text-right text-xs ${
+            feedback.ok ? "text-success" : "text-danger"
+          }`}
+        >
+          {feedback.text}
         </p>
       )}
     </div>

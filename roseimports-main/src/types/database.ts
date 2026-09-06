@@ -99,7 +99,7 @@ export type Product = Timestamps & {
 
   promotional: boolean;
 
-  /** Posição na vitrine, definida por arrastar no painel. */
+  /** Posição padrão no catálogo, definida por arrastar no painel. */
   showcase_order:
     | number
     | null;

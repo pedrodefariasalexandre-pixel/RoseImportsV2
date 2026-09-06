@@ -10,8 +10,9 @@ const NAV = [
   { href: "/admin/pedidos", label: "Pedidos" },
   { href: "/admin/estoque", label: "Estoque" },
   { href: "/admin/produtos", label: "Produtos" },
-  { href: "/admin/vitrine", label: "Vitrine" },
+  { href: "/admin/vitrine", label: "Ordem do catálogo" },
   { href: "/admin/cupons", label: "Cupons" },
+  { href: "/admin/influenciadores", label: "Influenciadores" },
 ];
 
 /**
@@ -33,7 +34,7 @@ export function AdminNav({ userName }: { userName: string }) {
         <div className="flex items-center gap-6">
           <span className="eyebrow whitespace-nowrap">Administração</span>
 
-          <nav className="hidden gap-6 sm:flex" aria-label="Painel">
+          <nav className="hidden gap-4 lg:flex xl:gap-6" aria-label="Painel">
             {NAV.map((item) => (
               <Link
                 key={item.href}
@@ -50,7 +51,7 @@ export function AdminNav({ userName }: { userName: string }) {
         </div>
 
         <div className="flex items-center gap-4">
-          <span className="hidden text-xs text-muted md:inline">{userName}</span>
+          <span className="hidden text-xs text-muted xl:inline">{userName}</span>
           <form action={signOut}>
             <button
               type="submit"
@@ -62,7 +63,7 @@ export function AdminNav({ userName }: { userName: string }) {
           <button
             type="button"
             onClick={() => setOpen((v) => !v)}
-            className="sm:hidden"
+            className="lg:hidden"
             aria-expanded={open}
             aria-controls="menu-painel"
           >
@@ -87,7 +88,7 @@ export function AdminNav({ userName }: { userName: string }) {
       </div>
 
       {open && (
-        <nav id="menu-painel" className="border-t border-line sm:hidden" aria-label="Painel">
+        <nav id="menu-painel" className="border-t border-line lg:hidden" aria-label="Painel">
           <ul className="mx-auto max-w-6xl px-5">
             {NAV.map((item) => (
               <li key={item.href} className="border-b border-line last:border-0">
