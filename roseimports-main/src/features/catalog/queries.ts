@@ -61,7 +61,7 @@ const PRODUCT_SELECT = `
   id, name, slug, brand, gender, product_type, description, promotional,
   olfactory_family_id, showcase_order,
   categories ( name, slug ),
-  olfactory_families ( name, slug ),
+  olfactory_families:olfactory_families!products_olfactory_family_id_fkey ( name, slug ),,
   product_olfactory_families (
     olfactory_families ( name, slug )
   ),
