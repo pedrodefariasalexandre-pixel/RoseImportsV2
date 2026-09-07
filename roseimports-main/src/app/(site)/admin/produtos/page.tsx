@@ -362,9 +362,23 @@ export default async function ProdutosPage({
       {/* TABELA */}
 
       {products.length > 0 ? (
-        <div className="overflow-hidden border border-line bg-surface">
+        <>
+          <div className="divide-y divide-line border border-line bg-surface lg:hidden">
+            {products.map((product) => (
+              <ProductMobileCard key={product.id} product={product} />
+            ))}
+          </div>
+
+          <div className="hidden overflow-hidden border border-line bg-surface lg:block">
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[56rem] text-sm">
+            <table className="w-full table-fixed text-sm">
+              <colgroup>
+                <col className="w-[31%]" />
+                <col className="w-[13%]" />
+                <col className="w-[10%]" />
+                <col className="w-[16%]" />
+                <col className="w-[30%]" />
+              </colgroup>
               <thead>
                 <tr className="border-b border-line text-left">
                   <Th>Produto</Th>
@@ -537,7 +551,7 @@ export default async function ProdutosPage({
 
                         {/* AÇÕES */}
 
-                        <td className="px-4 py-3">
+                        <td className="px-4 py-3 align-top">
                           <ProductRowActions
                             productId={
                               product.id
@@ -557,7 +571,8 @@ export default async function ProdutosPage({
               </tbody>
             </table>
           </div>
-        </div>
+          </div>
+        </>
       ) : (
         <div className="border border-line bg-surface px-5 py-14 text-center">
           <p className="text-sm font-medium text-ink">
@@ -600,6 +615,91 @@ export default async function ProdutosPage({
         label="de produtos"
       />
     </div>
+  );
+}
+
+function ProductMobileCard({ product }: { product: Row }) {
+  const activeVariants = product.product_variants.filter(
+    (variant) => variant.active,
+  );
+  const totalStock = activeVariants.reduce(
+    (sum, variant) => sum + variant.stock_quantity,
+    0,
+  );
+  const cover = [...(product.product_images ?? [])].sort(
+    (a, b) => a.sort_order - b.sort_order,
+  )[0];
+
+  return (
+    <article className={`p-4 ${product.active ? "" : "opacity-60"}`}>
+      <div className="flex items-start gap-3">
+        <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-md border border-line bg-ivory">
+          <ProductImage
+            path={cover?.storage_path ?? null}
+            alt={cover?.alt_text ?? product.name}
+            sizes="64px"
+          />
+        </div>
+
+        <div className="min-w-0 flex-1">
+          <Link
+            href={`/admin/produtos/${product.id}`}
+            className="line-clamp-2 text-sm font-medium leading-snug text-ink hover:text-rose"
+          >
+            {product.name}
+          </Link>
+
+          {product.brand && (
+            <p className="mt-1 text-xs text-muted">{product.brand}</p>
+          )}
+
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {product.active ? (
+              <Tag tone="success">Ativo</Tag>
+            ) : (
+              <Tag tone="muted">Inativo</Tag>
+            )}
+            {product.featured && <Tag tone="rose">Destaque</Tag>}
+            {product.promotional && <Tag tone="gold">Promoção</Tag>}
+            {product.active &&
+              product.product_variants.length > 0 &&
+              totalStock <= 0 && <Tag tone="danger">Sem estoque</Tag>}
+          </div>
+        </div>
+      </div>
+
+      <dl className="mt-4 grid grid-cols-2 gap-3 rounded-md bg-ivory-deep/45 p-3">
+        <div>
+          <dt className="text-[0.625rem] tracking-[0.08em] text-muted uppercase">
+            Categoria
+          </dt>
+          <dd className="mt-1 text-sm text-ink">
+            {product.categories?.name ?? "—"}
+          </dd>
+        </div>
+
+        <div>
+          <dt className="text-[0.625rem] tracking-[0.08em] text-muted uppercase">
+            Estoque
+          </dt>
+          <dd className="mt-1 text-sm text-ink">
+            {product.product_variants.length === 0
+              ? "Sem versões"
+              : `${totalStock} un. · ${activeVariants.length} ${
+                  activeVariants.length === 1 ? "versão" : "versões"
+                }`}
+          </dd>
+        </div>
+      </dl>
+
+      <div className="mt-4 border-t border-line pt-4">
+        <ProductRowActions
+          productId={product.id}
+          active={product.active}
+          featured={product.featured}
+        />
+      </div>
+    </article>
   );
 }
 
