@@ -16,3 +16,14 @@ export function categorySlugForProductType(
   if (productType === "cosmetico") return "cosmeticos";
   return null;
 }
+
+/** Mantém categoria e tipo sincronizados no cadastro manual. */
+export function productTypeForCategorySlug(
+  categorySlug: string | null,
+): ProductType | null {
+  if (categorySlug === "perfumes") return "perfume";
+  if (categorySlug === "body-splash") return "body_splash";
+  if (categorySlug === "body-cream") return "body_cream";
+  if (categorySlug === "cosmeticos") return "cosmetico";
+  return null;
+}

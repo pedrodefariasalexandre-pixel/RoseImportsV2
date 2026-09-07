@@ -324,12 +324,10 @@ function readProductForm(
       formData.get("gender") ?? "",
     ),
 
-    olfactoryFamilyId:
-      String(
-        formData.get(
-          "olfactoryFamilyId",
-        ) ?? "",
-      ),
+    olfactoryFamilyIds: formData
+      .getAll("olfactoryFamilyIds")
+      .map(String)
+      .filter(Boolean),
 
     description: String(
       formData.get(
@@ -395,8 +393,9 @@ export async function createProduct(
 
         gender: input.gender,
 
+        /* Mantida como família principal para compatibilidade com importações antigas. */
         olfactory_family_id:
-          input.olfactoryFamilyId,
+          input.olfactoryFamilyIds[0] ?? null,
 
         description:
           input.description,
@@ -426,6 +425,23 @@ export async function createProduct(
       error: translateDbError(
         error?.message ?? "",
       ),
+    };
+  }
+
+  const { error: familiesError } = await supabase.rpc(
+    "set_product_olfactory_families",
+    {
+      p_product_id: data.id,
+      p_family_ids: input.olfactoryFamilyIds,
+    },
+  );
+
+  if (familiesError) {
+    await supabase.from("products").delete().eq("id", data.id);
+
+    return {
+      ok: false,
+      error: translateDbError(familiesError.message),
     };
   }
 
@@ -480,8 +496,9 @@ export async function updateProduct(
 
       gender: input.gender,
 
+      /* Mantida como família principal para compatibilidade com importações antigas. */
       olfactory_family_id:
-        input.olfactoryFamilyId,
+        input.olfactoryFamilyIds[0] ?? null,
 
       description:
         input.description,
@@ -503,6 +520,21 @@ export async function updateProduct(
       error: translateDbError(
         error.message,
       ),
+    };
+  }
+
+  const { error: familiesError } = await supabase.rpc(
+    "set_product_olfactory_families",
+    {
+      p_product_id: productId,
+      p_family_ids: input.olfactoryFamilyIds,
+    },
+  );
+
+  if (familiesError) {
+    return {
+      ok: false,
+      error: translateDbError(familiesError.message),
     };
   }
 

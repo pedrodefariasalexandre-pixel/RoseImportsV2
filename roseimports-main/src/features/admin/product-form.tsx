@@ -7,7 +7,10 @@ import {
 } from "@/features/admin/actions";
 import { slugify } from "@/lib/slug";
 import { normalizeProductName } from "@/lib/product-name";
-import { categorySlugForProductType } from "@/lib/product-category";
+import {
+  categorySlugForProductType,
+  productTypeForCategorySlug,
+} from "@/lib/product-category";
 import { shouldShowProductDisplaySettings } from "@/features/admin/product-display-settings";
 import { UnsavedChangesGuard } from "@/features/admin/unsaved-changes-guard";
 import type {
@@ -23,10 +26,12 @@ export function ProductForm({
   product,
   categories,
   families,
+  selectedFamilyIds = [],
 }: {
   product: Product | null;
   categories: Category[];
   families: OlfactoryFamily[];
+  selectedFamilyIds?: string[];
 }) {
   const initialProductType =
     product?.product_type ?? "perfume";
@@ -52,6 +57,15 @@ export function ProductForm({
         initialProductType,
         categories,
       ) ?? product?.category_id ?? "",
+    );
+
+  const [olfactoryFamilyIds, setOlfactoryFamilyIds] =
+    useState<string[]>(
+      selectedFamilyIds.length > 0
+        ? selectedFamilyIds
+        : product?.olfactory_family_id
+          ? [product.olfactory_family_id]
+          : [],
     );
 
   const [pending, startTransition] =
@@ -128,6 +142,36 @@ export function ProductForm({
         setDirty(true);
       }
     });
+  }
+
+  function handleCategoryChange(nextCategoryId: string) {
+    setCategoryId(nextCategoryId);
+
+    const category = categories.find(
+      (item) => item.id === nextCategoryId,
+    );
+    const nextProductType = productTypeForCategorySlug(
+      category?.slug ?? null,
+    );
+
+    if (nextProductType) {
+      setProductType(nextProductType);
+
+      if (
+        nextProductType !== "perfume" &&
+        nextProductType !== "body_splash"
+      ) {
+        setOlfactoryFamilyIds([]);
+      }
+    }
+  }
+
+  function toggleOlfactoryFamily(familyId: string) {
+    setOlfactoryFamilyIds((current) =>
+      current.includes(familyId)
+        ? current.filter((id) => id !== familyId)
+        : [...current, familyId],
+    );
   }
 
   const usesOlfactoryFamily =
@@ -213,9 +257,7 @@ export function ProductForm({
               required
               value={categoryId}
               onChange={(event) =>
-                setCategoryId(
-                  event.target.value,
-                )
+                handleCategoryChange(event.target.value)
               }
               className={inputClass}
             >
@@ -223,15 +265,7 @@ export function ProductForm({
                 Escolha uma categoria
               </option>
 
-              {categories
-                .filter(
-                  (category) =>
-                    category.slug ===
-                    categorySlugForProductType(
-                      productType,
-                    ),
-                )
-                .map(
+              {categories.map(
                 (category) => (
                   <option
                     key={
@@ -275,6 +309,13 @@ export function ProductForm({
                     categories,
                   ) ?? "",
                 );
+
+                if (
+                  nextProductType !== "perfume" &&
+                  nextProductType !== "body_splash"
+                ) {
+                  setOlfactoryFamilyIds([]);
+                }
               }}
               className={inputClass}
             >
@@ -332,46 +373,43 @@ export function ProductForm({
           {/* FAMÍLIA OLFATIVA */}
 
           {usesOlfactoryFamily && (
-            <Field
-              label="Família olfativa"
-              htmlFor="olfactoryFamilyId"
-              hint="Opcional. Utilizada nos filtros do catálogo."
-              className="sm:col-span-2"
-            >
-              <select
-                id="olfactoryFamilyId"
-                name="olfactoryFamilyId"
-                defaultValue={
-                  product
-                    ?.olfactory_family_id ??
-                  ""
-                }
-                className={
-                  inputClass
-                }
-              >
-                <option value="">
-                  Não se aplica
-                </option>
+            <fieldset className="sm:col-span-2">
+              <legend className="text-xs font-medium tracking-[0.08em] text-ink uppercase">
+                Famílias olfativas
+              </legend>
 
-                {families.map(
-                  (family) => (
-                    <option
-                      key={
-                        family.id
-                      }
-                      value={
-                        family.id
-                      }
+              <p className="mt-1.5 text-xs leading-relaxed text-muted">
+                Opcional. Marque todas as famílias que representam o produto.
+              </p>
+
+              <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                {families.map((family) => {
+                  const selected = olfactoryFamilyIds.includes(family.id);
+
+                  return (
+                    <label
+                      key={family.id}
+                      className={`flex cursor-pointer items-center gap-3 rounded-sm border px-3.5 py-3 text-sm transition-colors ${
+                        selected
+                          ? "border-rose bg-rose-wash/50 text-ink"
+                          : "border-line bg-ivory/40 text-muted hover:bg-ivory-deep/40"
+                      }`}
                     >
-                      {
-                        family.name
-                      }
-                    </option>
-                  ),
-                )}
-              </select>
-            </Field>
+                      <input
+                        type="checkbox"
+                        name="olfactoryFamilyIds"
+                        value={family.id}
+                        checked={selected}
+                        onChange={() => toggleOlfactoryFamily(family.id)}
+                        className="h-4 w-4 shrink-0 accent-[#a85f72]"
+                      />
+
+                      <span>{family.name}</span>
+                    </label>
+                  );
+                })}
+              </div>
+            </fieldset>
           )}
 
           {/*
@@ -381,7 +419,7 @@ export function ProductForm({
           {!usesOlfactoryFamily && (
             <input
               type="hidden"
-              name="olfactoryFamilyId"
+              name="olfactoryFamilyIds"
               value=""
             />
           )}

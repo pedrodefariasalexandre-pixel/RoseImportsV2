@@ -73,6 +73,12 @@ export type Category = Timestamps & {
 
 export type OlfactoryFamily = Category;
 
+export type ProductOlfactoryFamily = {
+  product_id: string;
+  olfactory_family_id: string;
+  created_at: string;
+};
+
 export type Product = Timestamps & {
   id: string;
 
@@ -402,6 +408,9 @@ export type Database = {
       olfactory_families:
         Table<OlfactoryFamily>;
 
+      product_olfactory_families:
+        Table<ProductOlfactoryFamily>;
+
       products: Table<
         ProductRow,
         Partial<Product>,
@@ -450,6 +459,15 @@ export type Database = {
     };
 
     Functions: {
+      set_product_olfactory_families: {
+        Args: {
+          p_product_id: string;
+          p_family_ids: string[];
+        };
+
+        Returns: undefined;
+      };
+
       normalize_search_text: {
         Args: {
           value: string;

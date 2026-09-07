@@ -177,10 +177,10 @@ export const productSchema = z.object({
       .nullable(),
   ),
 
-  olfactoryFamilyId: z.preprocess(
-    emptyToNull,
-    z.string().uuid().nullable(),
-  ),
+  olfactoryFamilyIds: z
+    .array(z.string().uuid())
+    .max(12, "Escolha no máximo 12 famílias olfativas.")
+    .transform((ids) => [...new Set(ids)]),
 
   description: z.preprocess(
     emptyToNull,

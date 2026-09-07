@@ -50,6 +50,9 @@ type RawProduct = {
   showcase_order: number | null;
   categories: { name: string; slug: string } | null;
   olfactory_families: { name: string; slug: string } | null;
+  product_olfactory_families: Array<{
+    olfactory_families: { name: string; slug: string } | null;
+  }>;
   product_variants: RawVariant[];
   product_images: RawImage[];
 };
@@ -59,6 +62,9 @@ const PRODUCT_SELECT = `
   olfactory_family_id, showcase_order,
   categories ( name, slug ),
   olfactory_families ( name, slug ),
+  product_olfactory_families (
+    olfactory_families ( name, slug )
+  ),
   product_variants ( id, label, volume_ml, variant_type, price_cents, stock_quantity, sort_order, active ),
   product_images ( storage_path, alt_text, sort_order )
 `;
@@ -169,6 +175,10 @@ function toCard(raw: RawProduct): ProductCard {
 }
 
 function toDetail(raw: RawProduct): ProductDetail {
+  const familyNames = raw.product_olfactory_families
+    .map((relation) => relation.olfactory_families?.name)
+    .filter((name): name is string => Boolean(name));
+
   return {
     id: raw.id,
     name: raw.name,
@@ -179,7 +189,10 @@ function toDetail(raw: RawProduct): ProductDetail {
     gender: raw.gender,
     productType: raw.product_type,
     description: raw.description,
-    familyName: raw.olfactory_families?.name ?? null,
+    familyName:
+      familyNames.length > 0
+        ? familyNames.join(", ")
+        : raw.olfactory_families?.name ?? null,
     images: [...raw.product_images]
       .sort((a, b) => a.sort_order - b.sort_order)
       .map((i) => ({ path: i.storage_path, alt: i.alt_text })),
@@ -297,6 +310,7 @@ export async function getCatalogProducts(
 
   let categoryId: string | null = null;
   let familyId: string | null = null;
+  let familyProductIds: string[] | null = null;
 
   if (filters.categoria) {
     const { data, error } = await supabase
@@ -320,6 +334,21 @@ export async function getCatalogProducts(
     if (error) throw new Error(error.message);
     if (!data) return { products: [], total: 0 };
     familyId = data.id;
+
+    const { data: relations, error: relationsError } = await supabase
+      .from("product_olfactory_families")
+      .select("product_id")
+      .eq("olfactory_family_id", familyId);
+
+    if (relationsError) throw new Error(relationsError.message);
+
+    familyProductIds = (relations ?? []).map(
+      (relation) => relation.product_id,
+    );
+
+    if (familyProductIds.length === 0) {
+      return { products: [], total: 0 };
+    }
   }
 
   const applyFilters = <
@@ -348,8 +377,8 @@ export async function getCatalogProducts(
       next = next.eq("category_id", categoryId);
     }
 
-    if (familyId) {
-      next = next.eq("olfactory_family_id", familyId);
+    if (familyProductIds) {
+      next = next.in("id", familyProductIds);
     }
 
     return next;

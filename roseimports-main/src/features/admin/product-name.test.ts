@@ -11,7 +11,7 @@ describe("nome do produto no cadastro manual", () => {
       categoryId: "90000000-0000-4000-8000-000000000001",
       productType: "perfume",
       gender: "",
-      olfactoryFamilyId: "",
+      olfactoryFamilyIds: [],
       description: "",
       active: false,
       featured: false,

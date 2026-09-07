@@ -64,6 +64,7 @@ export default async function EditarProdutoPage({
     imagesResult,
     categoriesResult,
     familiesResult,
+    productFamiliesResult,
   ] = await Promise.all([
     /* PRODUTO */
 
@@ -104,6 +105,13 @@ export default async function EditarProdutoPage({
       .select("id, name, slug")
       .eq("active", true)
       .order("sort_order"),
+
+    /* FAMÍLIAS JÁ MARCADAS NESTE PRODUTO */
+
+    supabase
+      .from("product_olfactory_families")
+      .select("olfactory_family_id")
+      .eq("product_id", id),
   ]);
 
   if (!productResult.data) {
@@ -128,6 +136,10 @@ export default async function EditarProdutoPage({
   const families =
     (familiesResult.data ??
       []) as OlfactoryFamily[];
+
+  const selectedFamilyIds = (
+    productFamiliesResult.data ?? []
+  ).map((item) => item.olfactory_family_id);
 
   const hasVariants =
     variants.length > 0;
@@ -487,11 +499,12 @@ export default async function EditarProdutoPage({
           </div>
 
           <div className="mt-7">
-            <ProductForm
-              product={product}
-              categories={categories}
-              families={families}
-            />
+          <ProductForm
+            product={product}
+            categories={categories}
+            families={families}
+            selectedFamilyIds={selectedFamilyIds}
+          />
           </div>
 
           {/* CONTINUAR PARA PREÇO */}
