@@ -540,8 +540,11 @@ export async function getProductPool(
   if (total > limit) {
     const windows = Math.ceil(total / limit);
 
-    from =
-      (Math.floor(Date.now() / POOL_WINDOW_MS) % windows) * limit;
+    from = (Math.floor(Date.now() / POOL_WINDOW_MS) % windows) * limit;
+    // Último bloco pode ser parcial (total não é múltiplo de limit); recua
+    // para sempre buscar `limit` linhas cheias, mesmo que sobreponha o
+    // bloco anterior.
+    from = Math.min(from, total - limit);
   }
 
   const { data, error } = await supabase
