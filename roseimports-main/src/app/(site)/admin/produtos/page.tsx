@@ -631,68 +631,70 @@ function ProductMobileCard({ product }: { product: Row }) {
   )[0];
 
   return (
-    <article className={`p-4 ${product.active ? "" : "opacity-60"}`}>
-      <div className="flex items-start gap-3">
-        <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-md border border-line bg-ivory">
-          <ProductImage
-            path={cover?.storage_path ?? null}
-            alt={cover?.alt_text ?? product.name}
-            sizes="64px"
-          />
-        </div>
+    <article className={`p-4 sm:p-3 ${product.active ? "" : "opacity-60"}`}>
+      <div className="md:grid md:grid-cols-[minmax(0,1.15fr)_minmax(18rem,0.85fr)] md:items-center md:gap-4">
+        <div className="flex min-w-0 items-start gap-3">
+          <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-md border border-line bg-ivory sm:h-14 sm:w-14">
+            <ProductImage
+              path={cover?.storage_path ?? null}
+              alt={cover?.alt_text ?? product.name}
+              sizes="64px"
+            />
+          </div>
 
-        <div className="min-w-0 flex-1">
-          <Link
-            href={`/admin/produtos/${product.id}`}
-            className="line-clamp-2 text-sm font-medium leading-snug text-ink hover:text-rose"
-          >
-            {product.name}
-          </Link>
+          <div className="min-w-0 flex-1">
+            <Link
+              href={`/admin/produtos/${product.id}`}
+              className="line-clamp-2 text-sm font-medium leading-snug text-ink hover:text-rose"
+            >
+              {product.name}
+            </Link>
 
-          {product.brand && (
-            <p className="mt-1 text-xs text-muted">{product.brand}</p>
-          )}
-
-          <div className="mt-2 flex flex-wrap gap-1.5">
-            {product.active ? (
-              <Tag tone="success">Ativo</Tag>
-            ) : (
-              <Tag tone="muted">Inativo</Tag>
+            {product.brand && (
+              <p className="mt-1 text-xs text-muted">{product.brand}</p>
             )}
-            {product.featured && <Tag tone="rose">Destaque</Tag>}
-            {product.promotional && <Tag tone="gold">Promoção</Tag>}
-            {product.active &&
-              product.product_variants.length > 0 &&
-              totalStock <= 0 && <Tag tone="danger">Sem estoque</Tag>}
+
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {product.active ? (
+                <Tag tone="success">Ativo</Tag>
+              ) : (
+                <Tag tone="muted">Inativo</Tag>
+              )}
+              {product.featured && <Tag tone="rose">Destaque</Tag>}
+              {product.promotional && <Tag tone="gold">Promoção</Tag>}
+              {product.active &&
+                product.product_variants.length > 0 &&
+                totalStock <= 0 && <Tag tone="danger">Sem estoque</Tag>}
+            </div>
           </div>
         </div>
+
+        <dl className="mt-4 grid grid-cols-2 gap-3 rounded-md bg-ivory-deep/45 p-3 md:mt-0 md:py-2.5">
+          <div>
+            <dt className="text-[0.625rem] tracking-[0.08em] text-muted uppercase">
+              Categoria
+            </dt>
+            <dd className="mt-1 text-sm text-ink">
+              {product.categories?.name ?? "—"}
+            </dd>
+          </div>
+
+          <div>
+            <dt className="text-[0.625rem] tracking-[0.08em] text-muted uppercase">
+              Estoque
+            </dt>
+            <dd className="mt-1 text-sm text-ink">
+              {product.product_variants.length === 0
+                ? "Sem versões"
+                : `${totalStock} un. · ${activeVariants.length} ${
+                    activeVariants.length === 1 ? "versão" : "versões"
+                  }`}
+            </dd>
+          </div>
+        </dl>
       </div>
 
-      <dl className="mt-4 grid grid-cols-2 gap-3 rounded-md bg-ivory-deep/45 p-3">
-        <div>
-          <dt className="text-[0.625rem] tracking-[0.08em] text-muted uppercase">
-            Categoria
-          </dt>
-          <dd className="mt-1 text-sm text-ink">
-            {product.categories?.name ?? "—"}
-          </dd>
-        </div>
-
-        <div>
-          <dt className="text-[0.625rem] tracking-[0.08em] text-muted uppercase">
-            Estoque
-          </dt>
-          <dd className="mt-1 text-sm text-ink">
-            {product.product_variants.length === 0
-              ? "Sem versões"
-              : `${totalStock} un. · ${activeVariants.length} ${
-                  activeVariants.length === 1 ? "versão" : "versões"
-                }`}
-          </dd>
-        </div>
-      </dl>
-
-      <div className="mt-4 border-t border-line pt-4">
+      <div className="mt-4 border-t border-line pt-4 sm:mt-3 sm:pt-3">
         <ProductRowActions
           productId={product.id}
           active={product.active}

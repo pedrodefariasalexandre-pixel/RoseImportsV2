@@ -29,7 +29,7 @@ export function ProductRowActions({
 
   return (
     <div className="flex w-full flex-col gap-2">
-      <div className="grid w-full grid-cols-2 gap-2">
+      <div className="grid w-full grid-cols-2 gap-2 sm:grid-cols-4">
         {!deleteArmed && (
           <>
             <Link

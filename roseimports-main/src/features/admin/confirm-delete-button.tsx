@@ -55,7 +55,7 @@ export function ConfirmDeleteButton({
 
   if (presentation === "panel") {
     return (
-      <span className="col-span-2 grid w-full min-w-0 grid-cols-2 gap-2 rounded-md border border-danger/25 bg-danger/5 p-2.5">
+      <span className="col-span-2 grid w-full min-w-0 grid-cols-2 gap-2 rounded-md border border-danger/25 bg-danger/5 p-2.5 sm:col-span-4">
         <span className="col-span-2 text-left text-xs font-medium text-ink">
           {prompt}
         </span>

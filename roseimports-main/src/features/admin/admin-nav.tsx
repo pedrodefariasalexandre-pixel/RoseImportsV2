@@ -16,6 +16,9 @@ const NAV = [
   { href: "/admin/influenciadores", label: "Influenciadores" },
 ];
 
+const headerActionClass =
+  "inline-flex h-9 w-20 items-center justify-center rounded-md border border-line bg-surface px-2 text-[0.68rem] font-semibold tracking-[0.06em] text-muted uppercase transition-colors hover:border-rose-soft hover:bg-ivory-deep/60 hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose sm:w-24 sm:text-xs";
+
 /** Cabeçalho exclusivo do painel e versão reduzida para autenticação. */
 export function AdminNav({ userName }: { userName: string | null }) {
   const pathname = usePathname();
@@ -59,7 +62,7 @@ export function AdminNav({ userName }: { userName: string | null }) {
         <div className="flex shrink-0 items-center gap-2">
           <Link
             href="/"
-            className="inline-flex h-9 w-20 items-center justify-center rounded-md border border-line bg-surface px-2 text-[0.68rem] font-semibold tracking-[0.06em] text-muted uppercase transition-colors hover:border-rose-soft hover:text-rose sm:w-24 sm:text-xs"
+            className={headerActionClass}
           >
             Ver loja
           </Link>
@@ -68,7 +71,7 @@ export function AdminNav({ userName }: { userName: string | null }) {
             <form action={signOut} className="flex">
               <button
                 type="submit"
-                className="inline-flex h-9 w-20 items-center justify-center rounded-md border border-line bg-surface px-2 text-[0.68rem] font-semibold tracking-[0.06em] text-muted uppercase transition-colors hover:border-danger/35 hover:bg-danger/5 hover:text-danger sm:w-24 sm:text-xs"
+                className={headerActionClass}
               >
                 Sair
               </button>
