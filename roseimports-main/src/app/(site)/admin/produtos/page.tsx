@@ -363,21 +363,21 @@ export default async function ProdutosPage({
 
       {products.length > 0 ? (
         <>
-          <div className="divide-y divide-line border border-line bg-surface lg:hidden">
+          <div className="divide-y divide-line border border-line bg-surface xl:hidden">
             {products.map((product) => (
               <ProductMobileCard key={product.id} product={product} />
             ))}
           </div>
 
-          <div className="hidden overflow-hidden border border-line bg-surface lg:block">
+          <div className="hidden overflow-hidden border border-line bg-surface xl:block">
           <div className="overflow-x-auto">
             <table className="w-full table-fixed text-sm">
               <colgroup>
-                <col className="w-[31%]" />
+                <col className="w-[29%]" />
                 <col className="w-[13%]" />
                 <col className="w-[10%]" />
-                <col className="w-[16%]" />
-                <col className="w-[30%]" />
+                <col className="w-[14%]" />
+                <col className="w-[34%]" />
               </colgroup>
               <thead>
                 <tr className="border-b border-line text-left">

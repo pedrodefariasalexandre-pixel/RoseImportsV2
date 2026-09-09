@@ -25,7 +25,7 @@ export function ProductRowActions({
   const [deleteArmed, setDeleteArmed] = useState(false);
 
   const secondaryActionClass =
-    "inline-flex min-h-9 items-center justify-center rounded-md border border-line bg-surface px-3 text-[0.6875rem] font-medium tracking-[0.06em] text-muted uppercase transition-colors hover:border-rose/40 hover:text-ink disabled:opacity-50";
+    "inline-flex min-h-11 min-w-0 w-full items-center justify-center whitespace-normal rounded-md border border-line bg-surface px-2.5 py-2 text-center text-[0.6875rem] font-medium leading-[1.2] tracking-[0.05em] text-muted uppercase transition-colors hover:border-rose/40 hover:text-ink disabled:opacity-50";
 
   return (
     <div className="flex w-full flex-col gap-2">
@@ -34,7 +34,7 @@ export function ProductRowActions({
           <>
             <Link
               href={`/admin/produtos/${productId}`}
-              className="inline-flex min-h-9 items-center justify-center rounded-md bg-rose px-3 text-[0.6875rem] font-medium tracking-[0.06em] text-white uppercase transition-opacity hover:opacity-90"
+              className="inline-flex min-h-11 min-w-0 w-full items-center justify-center whitespace-normal rounded-md bg-rose px-2.5 py-2 text-center text-[0.6875rem] font-medium leading-[1.2] tracking-[0.05em] text-white uppercase transition-opacity hover:opacity-90"
             >
               Editar
             </Link>
@@ -59,7 +59,7 @@ export function ProductRowActions({
               }}
               className={secondaryActionClass}
             >
-              {featured ? "Remover destaque" : "Destacar"}
+              {featured ? "Tirar destaque" : "Destacar"}
             </button>
 
             <button
@@ -88,7 +88,7 @@ export function ProductRowActions({
           confirmLabel="Sim, excluir"
           prompt="Excluir este produto?"
           presentation="panel"
-          className="inline-flex min-h-9 items-center justify-center rounded-md border border-danger/25 bg-danger/5 px-3 text-[0.6875rem] font-medium tracking-[0.06em] text-danger uppercase transition-colors hover:border-danger/50 hover:bg-danger/10"
+          className="inline-flex min-h-11 min-w-0 w-full items-center justify-center whitespace-normal rounded-md border border-danger/25 bg-danger/5 px-2.5 py-2 text-center text-[0.6875rem] font-medium leading-[1.2] tracking-[0.05em] text-danger uppercase transition-colors hover:border-danger/50 hover:bg-danger/10"
           onArmedChange={setDeleteArmed}
           onConfirm={() => deleteProduct(productId)}
           onResult={(result) =>

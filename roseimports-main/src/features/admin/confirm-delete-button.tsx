@@ -55,7 +55,7 @@ export function ConfirmDeleteButton({
 
   if (presentation === "panel") {
     return (
-      <span className="col-span-2 grid w-full grid-cols-2 gap-2 rounded-md border border-danger/25 bg-danger/5 p-2.5">
+      <span className="col-span-2 grid w-full min-w-0 grid-cols-2 gap-2 rounded-md border border-danger/25 bg-danger/5 p-2.5">
         <span className="col-span-2 text-left text-xs font-medium text-ink">
           {prompt}
         </span>
@@ -70,7 +70,7 @@ export function ConfirmDeleteButton({
               finish();
             })
           }
-          className="min-h-9 rounded-md bg-danger px-3 text-[0.6875rem] font-medium tracking-[0.06em] text-white uppercase transition-opacity hover:opacity-90 disabled:opacity-50"
+          className="min-h-11 min-w-0 whitespace-normal rounded-md bg-danger px-2 py-2 text-center text-[0.6875rem] font-medium leading-[1.2] tracking-[0.04em] text-white uppercase transition-opacity hover:opacity-90 disabled:opacity-50"
         >
           {pending ? "Excluindo…" : confirmLabel}
         </button>
@@ -79,7 +79,7 @@ export function ConfirmDeleteButton({
           type="button"
           disabled={pending}
           onClick={finish}
-          className="min-h-9 rounded-md border border-line bg-surface px-3 text-[0.6875rem] font-medium tracking-[0.06em] text-muted uppercase hover:text-ink disabled:opacity-50"
+          className="min-h-11 min-w-0 whitespace-normal rounded-md border border-line bg-surface px-2 py-2 text-center text-[0.6875rem] font-medium leading-[1.2] tracking-[0.04em] text-muted uppercase hover:text-ink disabled:opacity-50"
         >
           {cancelLabel}
         </button>
