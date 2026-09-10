@@ -38,12 +38,7 @@ export function ProductCard({
             priority={priority}
             className="absolute inset-0"
             imageClassName="object-contain object-center"
-          />
-
-          <FavoriteButton
-            productId={product.id}
-            productName={product.name}
-            className="absolute right-3 top-3 z-30"
+            variant="card"
           />
 
           {product.promotional && !soldOut && (
@@ -140,11 +135,14 @@ export function ProductCard({
             />
           </div>
 
-          <div className="mt-auto pt-5">
+          {/* Comprar e favoritar dividem a mesma linha: o coração saiu de cima
+              da foto para deixar a imagem limpa, e fica onde a pessoa decide.
+              O esgotado também mantém o coração — dá para favoritar e esperar. */}
+          <div className="mt-auto flex gap-2 pt-5">
             {soldOut ? (
               <span
                 className="
-                  flex h-11 w-full items-center justify-center
+                  flex h-11 flex-1 items-center justify-center
                   rounded-lg border border-line px-4
                   text-sm font-medium text-muted
                 "
@@ -155,7 +153,7 @@ export function ProductCard({
               <Link
                 href={`/produto/${product.slug}`}
                 className="
-                  flex h-11 w-full items-center justify-center
+                  flex h-11 flex-1 items-center justify-center
                   rounded-lg bg-rose px-4
                   text-sm font-medium text-white
                   transition-all duration-200
@@ -168,6 +166,12 @@ export function ProductCard({
                 Ver produto
               </Link>
             )}
+
+            <FavoriteButton
+              productId={product.id}
+              productName={product.name}
+              shape="square"
+            />
           </div>
         </div>
       </div>

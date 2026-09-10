@@ -1,6 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import {
+  CAROUSEL_ARROW_SKIN,
+  ChevronIcon,
+} from "@/components/carousel-arrow";
 import { ProductImage } from "@/components/product-image";
 
 export function ProductGallery({
@@ -64,62 +68,34 @@ export function ProductGallery({
               type="button"
               onClick={() => move(-1)}
               aria-label={`Ver imagem anterior de ${productName}`}
-              className="
-                pointer-events-none absolute left-3 top-1/2 z-10
-                flex h-11 w-11 -translate-y-1/2 items-center justify-center
-                rounded-full border border-line bg-surface/95 text-ink
-                opacity-0 shadow-[0_4px_14px_rgba(0,0,0,0.12)]
-                transition-all duration-200
-                hover:border-rose hover:bg-rose hover:text-white
+              className={`
+                pointer-events-none absolute left-1 top-1/2 z-10
+                ${CAROUSEL_ARROW_SKIN}
+                -translate-y-1/2
+                opacity-0 transition-all duration-200
                 focus-visible:pointer-events-auto focus-visible:opacity-100
                 group-hover/gallery:pointer-events-auto group-hover/gallery:opacity-100
                 max-sm:pointer-events-auto max-sm:opacity-100
-              "
+              `}
             >
-              <svg
-                width="18"
-                height="18"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.7"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                aria-hidden
-              >
-                <path d="m15 18-6-6 6-6" />
-              </svg>
+              <ChevronIcon direction="left" />
             </button>
 
             <button
               type="button"
               onClick={() => move(1)}
               aria-label={`Ver próxima imagem de ${productName}`}
-              className="
-                pointer-events-none absolute right-3 top-1/2 z-10
-                flex h-11 w-11 -translate-y-1/2 items-center justify-center
-                rounded-full border border-line bg-surface/95 text-ink
-                opacity-0 shadow-[0_4px_14px_rgba(0,0,0,0.12)]
-                transition-all duration-200
-                hover:border-rose hover:bg-rose hover:text-white
+              className={`
+                pointer-events-none absolute right-1 top-1/2 z-10
+                ${CAROUSEL_ARROW_SKIN}
+                -translate-y-1/2
+                opacity-0 transition-all duration-200
                 focus-visible:pointer-events-auto focus-visible:opacity-100
                 group-hover/gallery:pointer-events-auto group-hover/gallery:opacity-100
                 max-sm:pointer-events-auto max-sm:opacity-100
-              "
+              `}
             >
-              <svg
-                width="18"
-                height="18"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.7"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                aria-hidden
-              >
-                <path d="m9 18 6-6-6-6" />
-              </svg>
+              <ChevronIcon direction="right" />
             </button>
           </>
         )}

@@ -1,6 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import {
+  CAROUSEL_ARROW_SKIN,
+  ChevronIcon,
+} from "@/components/carousel-arrow";
 import { useEffect, useState } from "react";
 import { ProductImage } from "@/components/product-image";
 import { useHomePicks } from "@/features/home/home-picks";
@@ -247,44 +251,19 @@ export function HeroCarousel() {
               type="button"
               onClick={() => goTo(activeIndex - 1)}
               aria-label="Destaque anterior"
-              className="
-                absolute left-4 top-1/2 z-20
-                flex h-11 w-11
+              className={`
+                absolute left-2 top-1/2 z-20
+                ${CAROUSEL_ARROW_SKIN}
                 -translate-y-1/2
-                items-center justify-center
-                rounded-full
-                border border-white/40
-                bg-white/90
-                text-ink
-                shadow-sm
-                backdrop-blur-sm
                 transition-all duration-300 ease-out
-
-                hover:bg-rose
-                hover:text-white
-                hover:shadow-md
-
-                active:scale-95
 
                 lg:-translate-x-2
                 lg:opacity-0
                 lg:group-hover/image:translate-x-0
                 lg:group-hover/image:opacity-100
-              "
+              `}
             >
-              <svg
-                width="18"
-                height="18"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.8"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                aria-hidden
-              >
-                <path d="m15 18-6-6 6-6" />
-              </svg>
+              <ChevronIcon direction="left" />
             </button>
 
             {/* Próximo */}
@@ -292,44 +271,19 @@ export function HeroCarousel() {
               type="button"
               onClick={() => goTo(activeIndex + 1)}
               aria-label="Próximo destaque"
-              className="
-                absolute right-4 top-1/2 z-20
-                flex h-11 w-11
+              className={`
+                absolute right-2 top-1/2 z-20
+                ${CAROUSEL_ARROW_SKIN}
                 -translate-y-1/2
-                items-center justify-center
-                rounded-full
-                border border-white/40
-                bg-white/90
-                text-ink
-                shadow-sm
-                backdrop-blur-sm
                 transition-all duration-300 ease-out
-
-                hover:bg-rose
-                hover:text-white
-                hover:shadow-md
-
-                active:scale-95
 
                 lg:translate-x-2
                 lg:opacity-0
                 lg:group-hover/image:translate-x-0
                 lg:group-hover/image:opacity-100
-              "
+              `}
             >
-              <svg
-                width="18"
-                height="18"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.8"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                aria-hidden
-              >
-                <path d="m9 18 6-6-6-6" />
-              </svg>
+              <ChevronIcon direction="right" />
             </button>
           </>
         )}
