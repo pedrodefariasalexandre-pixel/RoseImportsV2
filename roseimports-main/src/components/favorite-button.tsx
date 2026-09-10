@@ -10,14 +10,26 @@ import { useFavorites } from "@/features/favorites/use-favorites";
 export function FavoriteButton({
   productId,
   productName,
+  shape = "circle",
   className = "",
 }: {
   productId: string;
   productName: string;
+  /**
+   * "circle" é o botão solto (página do produto, ao lado do título).
+   * "square" fica colado ao Comprar no card: mesmo raio e mesma altura do
+   * botão de compra, e fundo rosé em vez de contorno vazado — vazado ao lado
+   * de um botão sólido lia como remendo.
+   */
+  shape?: "circle" | "square";
   className?: string;
 }) {
   const { isFavorite, toggle, ready } = useFavorites();
   const active = ready && isFavorite(productId);
+  const skin =
+    shape === "square"
+      ? "rounded-lg bg-rose-wash hover:bg-rose hover:text-white"
+      : "rounded-full border border-line bg-surface/95 backdrop-blur-sm hover:border-rose hover:text-rose";
 
   return (
     <button
@@ -36,11 +48,10 @@ export function FavoriteButton({
       }
       title={active ? "Remover dos favoritos" : "Adicionar aos favoritos"}
       className={`
-        flex h-11 w-11 items-center justify-center rounded-full
-        border border-line bg-surface/95 backdrop-blur-sm
+        flex h-11 w-11 shrink-0 items-center justify-center
         transition-all duration-200
-        hover:border-rose hover:text-rose
         active:scale-95
+        ${skin}
         ${active ? "text-rose" : "text-ink"}
         ${className}
       `}
