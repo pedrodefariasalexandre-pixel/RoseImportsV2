@@ -202,7 +202,7 @@ export function VariantSelector({
             type="button"
             onClick={handleAdd}
             disabled={!canAdd}
-            className="w-full bg-rose px-8 py-4 text-xs tracking-[0.18em] text-white uppercase transition-colors hover:bg-rose-deep disabled:cursor-not-allowed disabled:opacity-40"
+            className="w-full rounded-xl bg-rose px-8 py-4 text-sm font-semibold text-white transition-all hover:-translate-y-0.5 hover:bg-rose-deep hover:shadow-[0_8px_20px_rgba(168,95,114,0.22)] active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-40"
           >
             Adicionar ao carrinho
           </button>
@@ -239,7 +239,7 @@ export function VariantSelector({
       </p>
 
       {selected && selected.maxQuantity > 0 && (
-        <div className="fixed inset-x-0 bottom-0 z-50 border-t border-line bg-surface/95 px-4 pt-3 shadow-[0_-10px_30px_rgba(25,20,19,0.10)] backdrop-blur-md pb-[max(0.75rem,env(safe-area-inset-bottom))] lg:hidden">
+        <div className="fixed inset-x-0 bottom-0 z-50 border-t border-line bg-surface/95 px-4 pt-3 shadow-[0_-10px_30px_rgba(25,20,19,0.10)] backdrop-blur-md pb-[max(0.75rem,env(safe-area-inset-bottom))] md:hidden">
           <div className="mx-auto flex max-w-xl items-center gap-3">
             <div className="min-w-0 flex-1">
               <p className="truncate text-xs text-muted">

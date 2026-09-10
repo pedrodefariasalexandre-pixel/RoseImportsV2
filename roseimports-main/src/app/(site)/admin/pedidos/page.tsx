@@ -163,16 +163,16 @@ export default async function PedidosPage({
   const lastVisible = total > 0 ? Math.min(from + orders.length, total) : 0;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-7">
       {/* CABEÇALHO */}
 
-      <header className="flex flex-col gap-5 border-b border-line pb-6 lg:flex-row lg:items-end lg:justify-between">
+      <header className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
         <div>
-          <p className="eyebrow">
+          <p className="eyebrow text-rose">
             Operação
           </p>
 
-          <h1 className="mt-1 text-2xl">
+          <h1 className="mt-1 text-3xl sm:text-4xl">
             Pedidos
           </h1>
 
@@ -185,9 +185,10 @@ export default async function PedidosPage({
         <div className="flex flex-col gap-2 sm:flex-row">
           <Link
             href="/admin/estoque"
-            className="inline-flex w-fit items-center justify-center border border-line px-5 py-3 text-xs font-medium tracking-[0.1em] text-ink uppercase transition-colors hover:bg-white"
+            className="inline-flex w-fit items-center justify-center gap-2 rounded-xl border border-line bg-white px-5 py-3 text-sm font-semibold text-ink shadow-sm transition-all hover:-translate-y-0.5 hover:border-rose-soft hover:text-rose hover:shadow-md"
           >
             Ver estoque
+            <span aria-hidden>→</span>
           </Link>
         </div>
       </header>
@@ -197,10 +198,7 @@ export default async function PedidosPage({
       {counts && (
         <section
           className="
-            grid grid-cols-2 gap-px
-            overflow-hidden
-            border border-line
-            bg-line
+            grid grid-cols-2 gap-3
             md:grid-cols-5
           "
           aria-label="Resumo dos pedidos"
@@ -246,7 +244,10 @@ export default async function PedidosPage({
         status={status}
       />
 
-      <nav className="flex flex-wrap gap-1.5" aria-label="Filtrar por status">
+      <nav
+        className="flex w-fit max-w-full flex-wrap gap-1 rounded-2xl border border-line bg-white p-1.5 shadow-sm"
+        aria-label="Filtrar por status"
+      >
         {FILTERS.map((filter) => {
           const active = status === filter.value;
           return (
@@ -254,10 +255,10 @@ export default async function PedidosPage({
               key={filter.label}
               href={filterHref(params, filter.value)}
               aria-current={active ? "page" : undefined}
-              className={`border px-3.5 py-2 text-xs tracking-[0.1em] uppercase transition-colors ${
+              className={`rounded-xl px-3.5 py-2.5 text-xs font-semibold transition-colors ${
                 active
-                  ? "border-ink bg-ink text-ivory"
-                  : "border-line bg-surface text-muted hover:border-line-strong"
+                  ? "bg-rose text-white shadow-sm"
+                  : "text-muted hover:bg-rose-wash hover:text-rose-deep"
               }`}
             >
               {filter.label}
@@ -281,7 +282,7 @@ export default async function PedidosPage({
       {/* RESULTADO */}
 
       {!error && (
-        <p className="text-xs text-muted" aria-live="polite">
+        <p className="text-sm text-muted" aria-live="polite">
           Exibindo {firstVisible}–{lastVisible} de {total}{" "}
           {total === 1 ? "pedido" : "pedidos"}
           {hasFilters ? " para os filtros selecionados" : " no total"}.
@@ -291,11 +292,11 @@ export default async function PedidosPage({
       {/* TABELA */}
 
       {orders.length > 0 ? (
-        <div className="overflow-hidden border border-line bg-surface">
+        <div className="overflow-hidden rounded-2xl border border-line bg-surface shadow-[0_8px_30px_rgba(25,20,19,0.05)]">
           <div className="overflow-x-auto">
             <table className="w-full min-w-[48rem] text-sm">
               <thead>
-                <tr className="border-b border-line text-left">
+                <tr className="border-b border-line bg-ivory-deep/40 text-left">
                   <Th>Pedido</Th>
                   <Th>Data</Th>
                   <Th>Cliente</Th>
@@ -310,7 +311,7 @@ export default async function PedidosPage({
                 {orders.map((order) => (
                   <tr
                     key={order.id}
-                    className="transition-colors hover:bg-ivory/40"
+                    className="transition-colors hover:bg-rose-wash/35"
                   >
                     <td className="px-4 py-3">
                       <Link
@@ -364,7 +365,7 @@ export default async function PedidosPage({
         !error && (
           /* ESTADO VAZIO */
 
-          <div className="border border-line bg-surface px-5 py-14 text-center">
+          <div className="rounded-2xl border border-line bg-surface px-5 py-14 text-center shadow-sm">
             <p className="text-sm font-medium text-ink">
               {hasFilters ? "Nenhum pedido encontrado" : "Nenhum pedido ainda"}
             </p>
@@ -414,12 +415,12 @@ function SummaryItem({
   href?: string;
 }) {
   const content = (
-    <div className="bg-surface px-4 py-4 transition hover:bg-ivory/50">
-      <p className="text-xs text-muted">
+    <div className="group h-full rounded-2xl border border-line bg-white px-4 py-4 shadow-[0_6px_20px_rgba(25,20,19,0.04)] transition-all hover:-translate-y-0.5 hover:border-rose-soft hover:shadow-md">
+      <p className="text-xs font-semibold text-muted">
         {label}
       </p>
 
-      <p className="mt-1 text-xl font-medium text-ink">
+      <p className="mt-2 text-2xl font-semibold text-ink transition-colors group-hover:text-rose-deep">
         {value}
       </p>
     </div>

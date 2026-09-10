@@ -184,7 +184,13 @@ export function HeroCarousel() {
   };
 
   const heroTitle = formatHeroTitle(product.name);
-  const heroMeta = formatHeroMeta(product.name);
+  const heroMeta = [
+    product.categoryName,
+    product.familyName,
+    product.volumeLabel ?? formatHeroMeta(product.name),
+  ]
+    .filter(Boolean)
+    .join(" · ");
 
   return (
     <section
@@ -355,7 +361,7 @@ export function HeroCarousel() {
               text-gold
             "
           >
-            Novidade
+            Destaque Rose
           </span>
 
           {product.brand && (
@@ -392,7 +398,7 @@ export function HeroCarousel() {
         </h1>
 
         {/* Tipo + volume */}
-        <p className="mt-2 min-h-6 text-sm font-medium text-muted sm:text-base">
+        <p className="mt-2 line-clamp-1 text-sm font-medium text-muted sm:text-base">
           {heroMeta || "\u00A0"}
         </p>
 

@@ -238,7 +238,7 @@ export function CheckoutForm() {
   /* -------- Pedido criado -------- */
   if (success) {
     return (
-      <div className="mx-auto max-w-lg border border-line bg-surface px-6 py-12 text-center">
+      <div className="mx-auto max-w-lg rounded-2xl border border-line bg-surface px-6 py-12 text-center shadow-[0_18px_50px_rgba(25,20,19,0.07)]">
         <p className="eyebrow">Pedido gerado</p>
         <p className="mt-3 font-display text-4xl">#{success.orderNumber}</p>
         <div className="filete mx-auto mt-5 max-w-40" aria-hidden />
@@ -260,7 +260,7 @@ export function CheckoutForm() {
           href={success.whatsappUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="mt-7 inline-block w-full bg-rose px-8 py-4 text-xs tracking-[0.18em] text-white uppercase transition-colors hover:bg-rose-deep"
+          className="mt-7 inline-flex min-h-12 w-full items-center justify-center rounded-xl bg-rose px-8 py-4 text-sm font-semibold text-white transition-colors hover:bg-rose-deep"
         >
           Abrir WhatsApp
         </a>
@@ -270,6 +270,13 @@ export function CheckoutForm() {
           className="mt-5 block text-xs tracking-[0.14em] text-muted uppercase hover:text-rose"
         >
           Voltar ao catálogo
+        </Link>
+
+        <Link
+          href={`/acompanhar-pedido?pedido=${encodeURIComponent(success.orderNumber)}`}
+          className="mt-3 block text-xs font-semibold text-rose underline-offset-4 hover:underline"
+        >
+          Como acompanhar este pedido
         </Link>
       </div>
     );
@@ -293,11 +300,11 @@ export function CheckoutForm() {
   return (
     <form
       onSubmit={handleSubmit}
-      className="grid gap-10 lg:grid-cols-[1fr_20rem] lg:gap-14"
+      className="grid gap-8 lg:grid-cols-[1fr_22rem] lg:gap-10"
     >
       <div className="space-y-9">
         {/* -------- Nome -------- */}
-        <fieldset>
+        <fieldset className="rounded-2xl border border-line bg-surface p-5 sm:p-6">
           <label htmlFor="nome" className="eyebrow">
             Seu nome
           </label>
@@ -316,7 +323,7 @@ export function CheckoutForm() {
         </fieldset>
 
         {/* -------- Recebimento -------- */}
-        <fieldset>
+        <fieldset className="rounded-2xl border border-line bg-surface p-5 sm:p-6">
           <legend className="eyebrow">Como quer receber</legend>
 
           <div className="mt-2.5 grid gap-3 sm:grid-cols-2">
@@ -480,7 +487,7 @@ export function CheckoutForm() {
         </fieldset>
 
         {/* -------- Pagamento -------- */}
-        <fieldset>
+        <fieldset className="rounded-2xl border border-line bg-surface p-5 sm:p-6">
           <legend className="eyebrow">Forma de pagamento pretendida</legend>
 
           <div className="mt-2.5 grid gap-3 sm:grid-cols-3">
@@ -514,7 +521,7 @@ export function CheckoutForm() {
           )}
         </fieldset>
 
-        <p className="border-t border-line pt-6 text-xs text-muted">
+        <p className="rounded-xl bg-ivory-deep px-4 py-3 text-xs leading-5 text-muted">
           Pedimos só o necessário para o atendimento. O endereço é usado apenas
           para combinar a entrega no WhatsApp. Não coletamos CPF nem dados de
           cartão.
@@ -523,7 +530,7 @@ export function CheckoutForm() {
 
       {/* -------- Resumo e envio -------- */}
       <aside className="lg:sticky lg:top-24 lg:self-start">
-        <div className="border border-line bg-surface p-6">
+        <div className="rounded-2xl border border-line bg-surface p-6 shadow-[0_18px_50px_rgba(25,20,19,0.06)]">
           <h2 className="eyebrow">Seu pedido</h2>
 
           <ul className="mt-4 space-y-3 text-sm">
@@ -676,7 +683,7 @@ export function CheckoutForm() {
           <button
             type="submit"
             disabled={submitting}
-            className="mt-6 w-full bg-rose px-6 py-4 text-xs tracking-[0.18em] text-white uppercase transition-colors hover:bg-rose-deep disabled:opacity-50"
+            className="mt-6 w-full rounded-xl bg-rose px-6 py-4 text-sm font-semibold text-white transition-colors hover:bg-rose-deep disabled:opacity-50"
           >
             {submitting ? "Conferindo disponibilidade…" : "Finalizar no WhatsApp"}
           </button>
@@ -707,10 +714,10 @@ function RadioCard({
 }) {
   return (
     <label
-      className={`block cursor-pointer border px-4 py-3.5 transition-colors ${
+      className={`block cursor-pointer rounded-xl border px-4 py-3.5 transition-all ${
         checked
-          ? "border-rose bg-rose-wash"
-          : "border-line bg-surface hover:border-line-strong"
+          ? "border-rose bg-rose-wash shadow-[inset_0_0_0_1px_var(--color-rose)]"
+          : "border-line bg-surface hover:border-rose-soft hover:bg-ivory/60"
       }`}
     >
       <input

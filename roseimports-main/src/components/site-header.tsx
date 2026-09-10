@@ -2,58 +2,31 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Logo } from "@/components/logo";
 import { CartLink } from "@/components/cart-link";
 import { AdminLink } from "@/components/admin-link";
 import { FavoritesCount } from "@/components/favorites-count";
+import { HeaderSearch } from "@/components/header-search";
 import { whatsappContactUrl } from "@/lib/whatsapp";
 
 const NAV = [
+  { href: "/sobre-nos", label: "Sobre nós" },
   { href: "/catalogo?categoria=perfumes", label: "Perfumes" },
   { href: "/catalogo?categoria=body-cream", label: "Body Cream" },
   { href: "/catalogo?genero=masculino", label: "Masculino" },
   { href: "/catalogo?genero=feminino", label: "Feminino" },
   { href: "/catalogo", label: "Todos" },
+  { href: "/acompanhar-pedido", label: "Acompanhar pedido" },
 ];
-
-function SearchIcon() {
-  return (
-    <svg
-      width="19"
-      height="19"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      strokeLinecap="round"
-      aria-hidden
-    >
-      <circle cx="11" cy="11" r="7" />
-      <path d="m20 20-3.5-3.5" />
-    </svg>
-  );
-}
 
 export function SiteHeader() {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [searchOpen, setSearchOpen] = useState(false);
-  const searchInputRef = useRef<HTMLInputElement>(null);
   const pathname = usePathname();
 
   useEffect(() => {
     setMenuOpen(false);
-    setSearchOpen(false);
   }, [pathname]);
-
-  useEffect(() => {
-    if (searchOpen) searchInputRef.current?.focus();
-  }, [searchOpen]);
-
-  function toggleSearch() {
-    setMenuOpen(false);
-    setSearchOpen((value) => !value);
-  }
 
   return (
     <header className="sticky top-0 z-40 border-b border-line bg-ivory/95 backdrop-blur-md">
@@ -68,7 +41,6 @@ export function SiteHeader() {
           <button
             type="button"
             onClick={() => {
-              setSearchOpen(false);
               setMenuOpen((value) => !value);
             }}
             className="
@@ -108,42 +80,16 @@ export function SiteHeader() {
             imageClassName="!h-9 sm:!h-11 lg:!h-[52px]"
           />
 
-          <nav
-            className="ml-3 hidden items-center gap-6 xl:flex"
-            aria-label="Principal"
-          >
-            {NAV.map((item) => (
-              <Link
-                key={item.label}
-                href={item.href}
-                className="text-[0.72rem] font-semibold uppercase tracking-[0.12em] transition-colors duration-200 hover:text-rose 2xl:text-[0.78rem]"
-              >
-                {item.label}
-              </Link>
-            ))}
-          </nav>
+          <HeaderSearch
+            id="busca-header-desktop"
+            className="mx-auto hidden min-w-0 flex-1 md:block md:max-w-md lg:max-w-xl"
+          />
 
           <div className="ml-auto flex items-center gap-1 sm:gap-2">
-            <button
-              type="button"
-              onClick={toggleSearch}
-              aria-label={searchOpen ? "Fechar busca" : "Abrir busca"}
-              aria-expanded={searchOpen}
-              aria-controls="busca-recolhida"
-              className="
-                flex h-10 items-center justify-center gap-2 rounded-lg px-2.5
-                text-sm font-medium text-muted transition-colors duration-200
-                hover:bg-rose/10 hover:text-rose
-              "
-            >
-              <SearchIcon />
-              <span className="hidden 2xl:inline">Buscar</span>
-            </button>
-
             <AdminLink
               className="
                 hidden text-xs font-medium text-muted
-                transition-colors duration-200 hover:text-rose xl:inline
+                transition-colors duration-200 hover:text-rose 2xl:inline
               "
             />
 
@@ -189,51 +135,35 @@ export function SiteHeader() {
                 hidden min-h-10 shrink-0 items-center justify-center
                 rounded-full bg-rose px-3 text-xs font-semibold text-white
                 transition-colors duration-200 hover:bg-rose-deep
-                md:inline-flex md:px-4 xl:min-h-11 xl:px-5
+                xl:inline-flex xl:min-h-11 xl:px-5
               "
             >
               Falar no WhatsApp
             </a>
           </div>
         </div>
+
+        <div className="px-4 pb-2.5 sm:px-6 md:hidden">
+          <HeaderSearch id="busca-header-mobile" />
+        </div>
       </div>
 
-      {searchOpen && (
-        <div id="busca-recolhida" className="border-t border-line bg-ivory">
-          <form
-            action="/catalogo"
-            className="mx-auto max-w-7xl px-4 py-3 sm:px-6 lg:px-8"
-          >
-            <label htmlFor="busca-header" className="sr-only">
-              Buscar produtos
-            </label>
-
-            <div className="relative ml-auto w-full max-w-2xl">
-              <input
-                ref={searchInputRef}
-                id="busca-header"
-                name="q"
-                type="search"
-                placeholder="O que você procura hoje?"
-                className="
-                  w-full rounded-full border border-line bg-surface
-                  py-3 pl-5 pr-12 text-sm placeholder:text-muted
-                  transition-all duration-200 hover:border-rose/50
-                  focus:border-rose focus:outline-none focus:ring-2 focus:ring-rose/10
-                "
-              />
-
-              <button
-                type="submit"
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-muted transition-colors hover:text-rose"
-                aria-label="Pesquisar"
-              >
-                <SearchIcon />
-              </button>
-            </div>
-          </form>
+      <nav
+        className="hidden border-t border-line bg-surface/80 xl:block"
+        aria-label="Principal"
+      >
+        <div className="mx-auto flex max-w-7xl items-center justify-center gap-7 px-8 py-3.5 2xl:gap-9">
+          {NAV.map((item) => (
+            <Link
+              key={item.label}
+              href={item.href}
+              className="text-sm font-semibold tracking-[0.02em] text-ink-soft transition-colors duration-200 hover:text-rose"
+            >
+              {item.label}
+            </Link>
+          ))}
         </div>
-      )}
+      </nav>
 
       {menuOpen && (
         <nav

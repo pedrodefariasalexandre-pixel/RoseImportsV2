@@ -203,18 +203,17 @@ export default async function CatalogoPage({
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-12 lg:px-8">
-      <header className="max-w-2xl">
+      <header className="rounded-3xl bg-ink px-5 py-6 text-ivory sm:px-8 sm:py-7">
         <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
           Catálogo
         </h1>
-
-        <p className="mt-3 text-sm leading-6 text-muted sm:text-base">
-          Encontre perfumes, body splashes e body creams selecionados pela
-          Rose Imports.
+        <p className="mt-2 max-w-2xl text-sm leading-6 text-ivory/65 sm:text-base">
+          Consulte os produtos disponíveis e use os filtros para encontrar a
+          opção certa para você.
         </p>
       </header>
 
-      <section className="mt-8">
+      <section className="mt-5 rounded-2xl border border-line bg-surface p-3 shadow-[0_10px_30px_rgba(25,20,19,0.035)] sm:p-4">
         <Suspense fallback={<div className="h-24" />}>
           <CatalogFilters
             categories={categories}

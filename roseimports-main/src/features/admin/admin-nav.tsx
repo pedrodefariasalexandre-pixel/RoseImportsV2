@@ -17,7 +17,7 @@ const NAV = [
 ];
 
 const headerActionClass =
-  "inline-flex h-9 w-20 items-center justify-center rounded-md border border-line bg-surface px-2 text-[0.68rem] font-semibold tracking-[0.06em] text-muted uppercase transition-colors hover:border-rose-soft hover:bg-ivory-deep/60 hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose sm:w-24 sm:text-xs";
+  "inline-flex h-10 min-w-[5.5rem] items-center justify-center rounded-xl border border-line bg-white px-3 text-xs font-semibold text-ink-soft shadow-sm transition-all hover:-translate-y-0.5 hover:border-rose-soft hover:text-rose hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose sm:min-w-[6.25rem]";
 
 /** Cabeçalho exclusivo do painel e versão reduzida para autenticação. */
 export function AdminNav({ userName }: { userName: string | null }) {
@@ -30,8 +30,8 @@ export function AdminNav({ userName }: { userName: string | null }) {
   }
 
   return (
-    <header className="sticky top-0 z-40 border-b border-line bg-surface/95 backdrop-blur-md">
-      <div className="mx-auto flex min-h-16 max-w-6xl items-center justify-between gap-4 px-5 py-2.5">
+    <header className="sticky top-0 z-40 border-b border-line/80 bg-[#f7f4f1]/95 shadow-[0_1px_12px_rgba(25,20,19,0.04)] backdrop-blur-xl">
+      <div className="mx-auto flex min-h-16 max-w-7xl items-center justify-between gap-4 px-4 py-2.5 sm:px-6 lg:px-8">
         <div className="flex min-w-0 items-center gap-3 sm:gap-4">
           <Logo
             variant="mark"
@@ -40,11 +40,11 @@ export function AdminNav({ userName }: { userName: string | null }) {
             imageClassName="!h-9"
           />
 
-          <span className="hidden h-7 w-px bg-line sm:block" aria-hidden />
+          <span className="hidden h-8 w-px bg-line sm:block" aria-hidden />
 
           <Link
             href={authenticated ? "/admin" : "/admin/login"}
-            className="flex min-w-0 items-baseline gap-1 truncate text-sm font-semibold text-ink"
+            className="flex min-w-0 items-center gap-1.5 truncate text-sm font-semibold text-ink"
           >
             <span className="sm:hidden">Painel</span>
             <span className="hidden sm:inline">Painel administrativo</span>
@@ -53,7 +53,7 @@ export function AdminNav({ userName }: { userName: string | null }) {
                 <span className="text-muted" aria-hidden>
                   /
                 </span>
-                <span className="truncate text-muted">{userName}</span>
+                <span className="truncate font-medium text-rose">{userName}</span>
               </>
             )}
           </Link>
@@ -82,20 +82,22 @@ export function AdminNav({ userName }: { userName: string | null }) {
 
       {authenticated && (
         <>
-          <div className="border-t border-line/80">
-            <div className="mx-auto flex min-h-11 max-w-6xl items-center justify-between gap-4 px-5">
-              <span className="eyebrow whitespace-nowrap">Administração</span>
+          <div className="border-t border-line/70 bg-white/70">
+            <div className="mx-auto flex min-h-14 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
+              <span className="hidden whitespace-nowrap text-xs font-semibold text-ink-soft md:inline lg:hidden">
+                Administração
+              </span>
 
-              <nav className="hidden gap-4 lg:flex xl:gap-6" aria-label="Painel">
+              <nav className="hidden w-full items-center gap-1.5 lg:flex" aria-label="Painel">
                 {NAV.map((item) => (
                   <Link
                     key={item.href}
                     href={item.href}
                     aria-current={isActive(item.href) ? "page" : undefined}
-                    className={`border-b-2 py-3 text-xs tracking-[0.1em] uppercase transition-colors ${
+                    className={`rounded-xl px-3.5 py-2.5 text-sm font-medium transition-all xl:px-4 ${
                       isActive(item.href)
-                        ? "border-rose text-rose"
-                        : "border-transparent text-muted hover:text-ink"
+                        ? "bg-rose text-white shadow-sm"
+                        : "text-muted hover:bg-rose-wash hover:text-rose-deep"
                     }`}
                   >
                     {item.label}
@@ -106,11 +108,11 @@ export function AdminNav({ userName }: { userName: string | null }) {
               <button
                 type="button"
                 onClick={() => setOpen((value) => !value)}
-                className="flex h-10 w-10 items-center justify-center rounded-lg transition-colors hover:bg-ivory lg:hidden"
+                className="flex h-10 items-center justify-center gap-2 rounded-xl border border-line bg-white px-3 text-sm font-medium text-ink shadow-sm transition-colors hover:border-rose-soft hover:text-rose lg:hidden"
                 aria-expanded={open}
                 aria-controls="menu-painel"
               >
-                <span className="sr-only">
+                <span>
                   {open ? "Fechar menu do painel" : "Abrir menu do painel"}
                 </span>
                 <svg
@@ -136,18 +138,20 @@ export function AdminNav({ userName }: { userName: string | null }) {
           {open && (
             <nav
               id="menu-painel"
-              className="border-t border-line bg-surface lg:hidden"
+              className="border-t border-line bg-white px-4 pb-4 sm:px-6 lg:hidden"
               aria-label="Painel"
             >
-              <ul className="mx-auto max-w-6xl px-5 pb-2">
+              <ul className="mx-auto grid max-w-7xl gap-1 pt-3 sm:grid-cols-2">
                 {NAV.map((item) => (
-                  <li key={item.href} className="border-b border-line last:border-0">
+                  <li key={item.href}>
                     <Link
                       href={item.href}
                       onClick={() => setOpen(false)}
                       aria-current={isActive(item.href) ? "page" : undefined}
-                      className={`block py-3 text-sm ${
-                        isActive(item.href) ? "font-semibold text-rose" : "text-ink"
+                      className={`block rounded-xl px-4 py-3 text-sm transition-colors ${
+                        isActive(item.href)
+                          ? "bg-rose text-white"
+                          : "text-ink hover:bg-rose-wash hover:text-rose"
                       }`}
                     >
                       {item.label}

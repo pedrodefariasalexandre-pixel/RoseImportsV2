@@ -23,7 +23,7 @@ export function OrderListFilters({
     <form
       action={BASE_PATH}
       method="get"
-      className="border border-line bg-surface p-4 sm:p-5"
+      className="rounded-2xl border border-line bg-white p-4 shadow-[0_8px_28px_rgba(25,20,19,0.045)] sm:p-5"
     >
       {status ? <input type="hidden" name="status" value={status} /> : null}
 
@@ -38,7 +38,7 @@ export function OrderListFilters({
             type="search"
             defaultValue={query}
             placeholder="Número, cliente, bairro ou cupom..."
-            className="mt-2 w-full rounded-sm border border-line bg-ivory px-3.5 py-2.5 text-sm text-ink outline-none placeholder:text-muted/70 focus:border-rose focus:ring-1 focus:ring-rose/10"
+            className="mt-2 h-12 w-full rounded-xl border border-line bg-white px-4 text-sm text-ink shadow-sm outline-none placeholder:text-muted/70 focus:border-rose focus:ring-4 focus:ring-rose/10"
           />
         </div>
 
@@ -51,7 +51,7 @@ export function OrderListFilters({
             name="data_inicio"
             type="date"
             defaultValue={startDate}
-            className="mt-2 w-full rounded-sm border border-line bg-ivory px-3.5 py-2.5 text-sm text-ink outline-none focus:border-rose focus:ring-1 focus:ring-rose/10"
+            className="mt-2 h-12 w-full rounded-xl border border-line bg-white px-4 text-sm text-ink shadow-sm outline-none focus:border-rose focus:ring-4 focus:ring-rose/10"
           />
         </div>
 
@@ -64,14 +64,14 @@ export function OrderListFilters({
             name="data_fim"
             type="date"
             defaultValue={endDate}
-            className="mt-2 w-full rounded-sm border border-line bg-ivory px-3.5 py-2.5 text-sm text-ink outline-none focus:border-rose focus:ring-1 focus:ring-rose/10"
+            className="mt-2 h-12 w-full rounded-xl border border-line bg-white px-4 text-sm text-ink shadow-sm outline-none focus:border-rose focus:ring-4 focus:ring-rose/10"
           />
         </div>
 
         <div className="flex items-center gap-4">
           <button
             type="submit"
-            className="h-10 bg-ink px-5 text-xs font-medium tracking-[0.08em] text-ivory uppercase transition-opacity hover:opacity-90"
+            className="h-12 rounded-xl bg-ink px-6 text-xs font-semibold tracking-[0.06em] text-white uppercase shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
           >
             Filtrar
           </button>

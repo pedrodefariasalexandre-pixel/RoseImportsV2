@@ -97,7 +97,7 @@ export function CatalogFilters({ categories, families }: Props) {
   const mostrarFaixa = faixaAberta || Boolean(precoMin || precoMax);
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-3">
       <div className="relative">
         <label htmlFor="busca" className="sr-only">
           Buscar por nome ou marca
@@ -108,7 +108,7 @@ export function CatalogFilters({ categories, families }: Props) {
           value={term}
           onChange={(e) => setTerm(e.target.value)}
           placeholder="Buscar por nome ou marca"
-          className="w-full border border-line bg-surface py-3 pr-4 pl-11 text-sm placeholder:text-muted focus:border-rose focus:outline-none"
+          className="h-11 w-full rounded-xl border border-line bg-ivory/40 pr-4 pl-11 text-sm placeholder:text-muted focus:border-rose focus:bg-surface focus:outline-none focus:ring-4 focus:ring-rose/10"
         />
         <svg
           className="pointer-events-none absolute top-1/2 left-4 -translate-y-1/2 text-muted"
@@ -125,7 +125,7 @@ export function CatalogFilters({ categories, families }: Props) {
         </svg>
       </div>
 
-      <div className="flex flex-wrap items-center gap-x-6 gap-y-4">
+      <div className="flex flex-wrap items-center gap-2.5">
         <Select
           label="Categoria"
           value={categoria}
@@ -208,7 +208,7 @@ export function CatalogFilters({ categories, families }: Props) {
             onClick={() =>
               startTransition(() => router.replace("/catalogo", { scroll: false }))
             }
-            className="text-xs tracking-[0.14em] text-rose uppercase underline-offset-4 hover:underline"
+            className="inline-flex h-10 items-center rounded-lg px-3 text-xs font-semibold text-rose transition-colors hover:bg-rose-wash"
           >
             Limpar filtros
           </button>
@@ -366,15 +366,15 @@ function Select({
   const id = `filtro-${label.toLowerCase().replace(/\s+/g, "-")}`;
 
   return (
-    <div className="flex items-center gap-2">
-      <label htmlFor={id} className="eyebrow" style={{ fontSize: "0.5625rem" }}>
+    <div className="flex h-10 items-center gap-2 rounded-lg border border-line bg-ivory/45 px-3 transition-colors focus-within:border-rose focus-within:bg-surface">
+      <label htmlFor={id} className="shrink-0 text-[0.65rem] font-medium text-muted">
         {label}
       </label>
       <select
         id={id}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="filter-select cursor-pointer border-b border-line bg-ivory py-1 pr-1 text-sm text-ink focus:border-rose focus:outline-none"
+        className="filter-select min-w-0 cursor-pointer border-0 bg-transparent py-1 pr-1 text-sm font-medium text-ink focus:outline-none"
       >
         <option value="">{allLabel}</option>
         {options.map((option) => (

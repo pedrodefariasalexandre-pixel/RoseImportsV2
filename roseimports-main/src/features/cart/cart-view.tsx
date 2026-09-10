@@ -22,7 +22,7 @@ export function CartView() {
   return (
     <div className="grid gap-8 lg:grid-cols-[1fr_22rem] xl:gap-12">
       <div>
-        <div className="overflow-hidden rounded-lg border border-line bg-surface">
+        <div className="overflow-hidden rounded-2xl border border-line bg-surface shadow-[0_14px_40px_rgba(25,20,19,0.04)]">
           <ul className="divide-y divide-line">
             {items.map((item) => {
               const unavailable = item.maxQuantity <= 0;
@@ -60,15 +60,17 @@ export function CartView() {
       </div>
 
       <aside className="lg:sticky lg:top-36 lg:self-start">
-        <div className="rounded-lg border border-line bg-surface p-6">
+        <div className="rounded-2xl border border-line bg-surface p-6 shadow-[0_18px_50px_rgba(25,20,19,0.06)]">
           <h2 className="font-display text-xl">Resumo do pedido</h2>
           <dl className="mt-6 space-y-4 border-b border-line pb-5 text-sm">
             <div className="flex justify-between gap-4"><dt className="text-muted">Subtotal</dt><dd>{formatCents(subtotalCents)}</dd></div>
             <div className="flex justify-between gap-4"><dt className="text-muted">Entrega</dt><dd className="max-w-36 text-right text-xs text-muted">Confirmada no atendimento</dd></div>
           </dl>
           <div className="mt-5 flex items-baseline justify-between gap-4"><span className="text-sm font-medium">Total dos produtos</span><span className="font-display text-2xl">{formatCents(subtotalCents)}</span></div>
-          <Link href="/finalizar" className="mt-6 flex min-h-12 items-center justify-center bg-rose px-6 text-center text-xs tracking-[0.16em] text-white uppercase transition-colors hover:bg-rose-deep">Finalizar pedido</Link>
-          <p className="mt-4 text-xs leading-relaxed text-muted">{delivery.note}</p>
+          <Link href="/finalizar" className="mt-6 flex min-h-12 items-center justify-center rounded-xl bg-rose px-6 text-center text-sm font-semibold text-white transition-colors hover:bg-rose-deep">Continuar para finalizar</Link>
+          <p className="mt-4 rounded-xl bg-ivory-deep px-3.5 py-3 text-xs leading-relaxed text-muted">
+            O pagamento e a entrega serão combinados no WhatsApp. {delivery.note}
+          </p>
         </div>
       </aside>
     </div>

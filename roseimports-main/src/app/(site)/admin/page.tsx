@@ -87,23 +87,26 @@ export default async function DashboardPage({
     preorderCount > 0 ? (paidCount / preorderCount) * 100 : 0;
 
   return (
-    <div>
-      <header className="flex flex-wrap items-end justify-between gap-4">
+    <div className="space-y-8">
+      <header className="flex flex-wrap items-end justify-between gap-5">
         <div>
-          <p className="eyebrow">Visão geral</p>
-          <h1 className="mt-1 text-2xl">Painel</h1>
+          <p className="eyebrow text-rose">Visão geral</p>
+          <h1 className="mt-1 text-3xl sm:text-4xl">Painel</h1>
+          <p className="mt-2 max-w-xl text-sm text-muted">
+            Acompanhe o movimento da loja e acesse rapidamente o que precisa de atenção.
+          </p>
         </div>
 
-        <nav className="flex gap-1" aria-label="Período">
+        <nav className="flex rounded-xl border border-line bg-white p-1 shadow-sm" aria-label="Período">
           {(Object.keys(PERIOD_LABEL) as Period[]).map((key) => (
             <Link
               key={key}
               href={key === "hoje" ? "/admin" : `/admin?periodo=${key}`}
               aria-current={period === key ? "page" : undefined}
-              className={`border px-3.5 py-2 text-xs tracking-[0.1em] uppercase transition-colors ${
+              className={`rounded-lg px-3.5 py-2 text-xs font-semibold transition-colors ${
                 period === key
-                  ? "border-ink bg-ink text-ivory"
-                  : "border-line bg-surface text-muted hover:border-line-strong"
+                  ? "bg-ink text-white shadow-sm"
+                  : "text-muted hover:bg-ivory hover:text-ink"
               }`}
             >
               {PERIOD_LABEL[key]}
@@ -112,7 +115,7 @@ export default async function DashboardPage({
         </nav>
       </header>
 
-      <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
         <Metric label="Pré-pedidos" value={String(preorderCount)} />
         <Metric label="Pedidos pagos" value={String(paidCount)} />
         <Metric label="Faturamento" value={formatCents(revenueCents)} highlight />
@@ -120,28 +123,31 @@ export default async function DashboardPage({
         <Metric label="Conversão" value={`${conversion.toFixed(0)}%`} />
       </div>
 
-      <p className="mt-3 text-xs text-muted">
+      <p className="-mt-5 rounded-xl bg-ivory-deep/60 px-4 py-3 text-xs leading-relaxed text-muted">
         O faturamento soma apenas o valor dos produtos, já com o desconto de
         cupom aplicado: taxa de entrega e juros de cartão são combinados no
         atendimento e não entram aqui.
       </p>
 
-      <section className="mt-12">
+      <section>
         <div className="flex items-center justify-between">
-          <h2 className="font-display text-lg">Pedidos recentes</h2>
+          <div>
+            <p className="eyebrow text-rose">Atividade</p>
+            <h2 className="mt-1 font-display text-xl">Pedidos recentes</h2>
+          </div>
           <Link
             href="/admin/pedidos"
-            className="text-xs tracking-[0.12em] text-rose uppercase hover:underline"
+            className="rounded-lg px-3 py-2 text-sm font-semibold text-rose transition-colors hover:bg-rose-wash"
           >
             Ver todos
           </Link>
         </div>
 
         {recent.data && recent.data.length > 0 ? (
-          <div className="mt-4 overflow-x-auto border border-line bg-surface">
+          <div className="mt-4 overflow-x-auto rounded-2xl border border-line bg-surface shadow-[0_8px_30px_rgba(25,20,19,0.05)]">
             <table className="w-full min-w-[36rem] text-sm">
               <thead>
-                <tr className="border-b border-line text-left">
+                <tr className="border-b border-line bg-ivory-deep/40 text-left">
                   <Th>Pedido</Th>
                   <Th>Cliente</Th>
                   <Th>Data</Th>
@@ -151,7 +157,7 @@ export default async function DashboardPage({
               </thead>
               <tbody className="divide-y divide-line">
                 {recent.data.map((order) => (
-                  <tr key={order.id} className="hover:bg-ivory/60">
+                  <tr key={order.id} className="transition-colors hover:bg-rose-wash/40">
                     <td className="px-4 py-3">
                       <Link
                         href={`/admin/pedidos/${order.id}`}
@@ -182,7 +188,7 @@ export default async function DashboardPage({
             </table>
           </div>
         ) : (
-          <p className="mt-4 border border-line bg-surface px-5 py-10 text-center text-sm text-muted">
+          <p className="mt-4 rounded-2xl border border-line bg-surface px-5 py-12 text-center text-sm text-muted shadow-sm">
             Nenhum pedido ainda. Os pré-pedidos gerados pelo site aparecem aqui.
           </p>
         )}
@@ -202,14 +208,15 @@ function Metric({
 }) {
   return (
     <div
-      className={`border bg-surface px-5 py-6 ${
-        highlight ? "border-rose-soft" : "border-line"
+      className={`group relative overflow-hidden rounded-2xl border bg-surface px-5 py-6 shadow-[0_8px_24px_rgba(25,20,19,0.045)] transition-all hover:-translate-y-0.5 hover:shadow-[0_12px_30px_rgba(25,20,19,0.08)] ${
+        highlight ? "border-rose-soft bg-rose-wash/30" : "border-line"
       }`}
     >
-      <p className="eyebrow" style={{ fontSize: "0.5625rem" }}>
+      <span className={`absolute inset-x-0 top-0 h-1 ${highlight ? "bg-rose" : "bg-line-strong"}`} aria-hidden />
+      <p className="text-xs font-semibold text-muted">
         {label}
       </p>
-      <p className="mt-2 font-display text-2xl">{value}</p>
+      <p className={`mt-2 font-display text-2xl ${highlight ? "text-rose-deep" : "text-ink"}`}>{value}</p>
     </div>
   );
 }

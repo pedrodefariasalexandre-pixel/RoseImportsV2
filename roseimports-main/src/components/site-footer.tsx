@@ -11,6 +11,7 @@ const CATALOG = [
 ] as const;
 
 const POLICIES = [
+  ["Sobre nós", "/sobre-nos"],
   ["Política de Privacidade", "/privacidade"],
   ["Trocas e Devoluções", "/trocas-e-devolucoes"],
   ["Política de Entrega", "/politica-de-entrega"],
@@ -127,6 +128,13 @@ export function SiteFooter() {
               >
                 @{contact.instagram}
               </a>
+
+              <Link
+                href="/acompanhar-pedido"
+                className="block transition-all duration-200 hover:translate-x-0.5 hover:text-rose-soft"
+              >
+                Acompanhar pedido
+              </Link>
             </div>
           </div>
 

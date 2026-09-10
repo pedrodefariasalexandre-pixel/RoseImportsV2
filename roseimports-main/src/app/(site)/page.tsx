@@ -40,6 +40,12 @@ export default async function HomePage() {
         </div>
       </section>
 
+      <div className="mx-auto mt-4 max-w-7xl px-4 sm:mt-5 sm:px-6 lg:px-8">
+        <div className="overflow-hidden rounded-2xl">
+          <TrustStrip />
+        </div>
+      </div>
+
       {/* =====================================================
           CATEGORIAS REDONDAS
           ===================================================== */}
@@ -234,10 +240,6 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* =====================================================
-          BENEFÍCIOS / CONFIANÇA
-          ===================================================== */}
-      <TrustStrip />
       </main>
     </HomePicks>
   );

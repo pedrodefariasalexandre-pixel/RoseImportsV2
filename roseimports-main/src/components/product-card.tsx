@@ -17,7 +17,7 @@ export function ProductCard({
   return (
     <article
       className="
-        group/card h-full overflow-hidden rounded-xl
+        group/card h-full overflow-hidden rounded-2xl
         border border-line bg-surface
         transition-all duration-300 ease-out
         hover:-translate-y-1
@@ -25,10 +25,9 @@ export function ProductCard({
       "
     >
       <div className="flex h-full flex-col p-3 sm:p-4">
-        {/* Moldura branca: a foto de produto vem sobre branco, então
-            a sobra do object-contain some. O anel continua desenhando a
-            borda do quadro. */}
-        <div className="relative aspect-square overflow-hidden rounded-xl bg-surface ring-1 ring-inset ring-line/70">
+        {/* As fotos já usam fundo branco. Uma única superfície evita o
+            efeito de molduras sobrepostas sem precisar cortar o produto. */}
+        <div className="relative aspect-square overflow-hidden rounded-xl bg-surface">
           <ProductImageGallery
             images={product.images}
             fallbackPath={product.imagePath}
@@ -95,6 +94,25 @@ export function ProductCard({
             >
               {product.name}
             </Link>
+
+            <div className="mt-2 flex min-h-6 flex-wrap gap-1.5">
+              {product.categoryName && (
+                <span className="rounded-full bg-rose-wash px-2.5 py-1 text-[0.68rem] font-medium text-rose-deep">
+                  {product.categoryName}
+                </span>
+              )}
+              {product.volumeLabel && (
+                <span className="rounded-full bg-ivory-deep px-2.5 py-1 text-[0.68rem] font-medium text-ink-soft">
+                  {product.volumeLabel}
+                </span>
+              )}
+            </div>
+
+            {product.familyName && (
+              <p className="mt-2 line-clamp-1 text-xs text-muted">
+                Família olfativa: {product.familyName}
+              </p>
+            )}
           </div>
 
           <div className="mt-4">
@@ -147,7 +165,7 @@ export function ProductCard({
                   group-active/card:scale-[0.98]
                 "
               >
-                Comprar
+                Ver produto
               </Link>
             )}
           </div>
@@ -170,6 +188,7 @@ export function ProductGrid({
         grid grid-cols-2
         gap-x-3 gap-y-6
         sm:gap-x-5 sm:gap-y-8
+        md:grid-cols-3
         lg:grid-cols-4
       "
     >

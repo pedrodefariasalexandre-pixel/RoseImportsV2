@@ -68,6 +68,8 @@ export type ProductCard = {
   slug: string;
   brand: string | null;
   categoryName: string | null;
+  familyName: string | null;
+  volumeLabel: string | null;
   gender: Gender | null;
   promotional: boolean;
   fromPriceCents: number | null;
@@ -133,6 +135,23 @@ function toCard(raw: RawProduct): ProductCard {
   );
 
   const cover = images[0] ?? null;
+  const familyNames = raw.product_olfactory_families
+    .map((relation) => relation.olfactory_families?.name)
+    .filter((name): name is string => Boolean(name));
+  const volumes = Array.from(
+    new Set(
+      variants
+        .map((variant) => variant.volume_ml)
+        .filter((volume): volume is number => volume !== null && volume > 0),
+    ),
+  ).sort((a, b) => a - b);
+
+  const volumeLabel =
+    volumes.length === 0
+      ? null
+      : volumes.length === 1
+        ? `${volumes[0]} ml`
+        : `${volumes[0]}–${volumes.at(-1)} ml`;
 
   return {
     description: raw.description,
@@ -141,6 +160,11 @@ function toCard(raw: RawProduct): ProductCard {
     slug: raw.slug,
     brand: raw.brand,
     categoryName: raw.categories?.name ?? null,
+    familyName:
+      familyNames.length > 0
+        ? familyNames.join(", ")
+        : raw.olfactory_families?.name ?? null,
+    volumeLabel,
     gender: raw.gender,
     promotional: raw.promotional,
     fromPriceCents,

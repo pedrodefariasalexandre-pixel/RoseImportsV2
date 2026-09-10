@@ -198,4 +198,43 @@
   .no-scrollbar::-webkit-scrollbar {
     display: none;
   }
+
+  /* Base visual compartilhada pelas telas administrativas. */
+  .admin-shell {
+    background:
+      radial-gradient(circle at 8% 0%, rgba(231, 185, 194, 0.14), transparent 24rem),
+      radial-gradient(circle at 92% 12%, rgba(230, 203, 164, 0.12), transparent 22rem);
+  }
+
+  .admin-shell h1 {
+    color: var(--color-ink);
+    letter-spacing: -0.035em;
+  }
+
+  .admin-shell :is(input, select, textarea):not([type="checkbox"]):not([type="radio"]):not([type="hidden"]) {
+    border-radius: 0.75rem;
+    background-color: rgba(255, 255, 255, 0.92);
+    box-shadow: 0 1px 2px rgba(25, 20, 19, 0.03);
+  }
+
+  .admin-shell :is(input, select, textarea):not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):focus {
+    box-shadow: 0 0 0 3px rgba(168, 95, 114, 0.1);
+  }
+
+  .admin-shell :is(button, a.inline-flex):not([class~="rounded-full"]) {
+    border-radius: 0.75rem;
+  }
+
+  .admin-shell :is(section, article, div, ol)[class~="border"][class~="bg-surface"] {
+    border-radius: 1rem;
+    box-shadow: 0 8px 28px rgba(25, 20, 19, 0.045);
+  }
+
+  .admin-shell table thead {
+    background-color: color-mix(in srgb, var(--color-ivory-deep) 55%, white);
+  }
+
+  .admin-shell table tbody tr {
+    transition: background-color 160ms ease;
+  }
 }

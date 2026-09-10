@@ -16,13 +16,15 @@ export default async function AdminLayout({
   const admin = await getAdminUser();
 
   return (
-    <>
+    <div className="min-h-screen bg-[#f7f4f1]">
       <AdminNav userName={admin?.name ?? null} />
       {admin ? (
-        <div className="mx-auto max-w-6xl px-5 py-8">{children}</div>
+        <main className="admin-shell mx-auto min-h-[calc(100vh-8rem)] max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
+          {children}
+        </main>
       ) : (
-        children
+        <main className="admin-shell">{children}</main>
       )}
-    </>
+    </div>
   );
 }
