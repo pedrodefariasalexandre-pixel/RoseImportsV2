@@ -203,9 +203,9 @@ export function HeroCarousel() {
       className={`
         grid overflow-hidden
         bg-surface
-        md:h-[460px]
+        md:min-h-[500px]
         md:grid-cols-[0.88fr_1.12fr]
-        lg:h-[512px]
+        lg:min-h-[540px]
         lg:grid-cols-[0.9fr_1.1fr]
         ${ready ? "" : "opacity-0"}
       `}
@@ -220,7 +220,8 @@ export function HeroCarousel() {
           rounded-r-2xl
           bg-surface
           sm:h-[260px]
-          md:h-full
+          md:min-h-[500px]
+          lg:min-h-[540px]
         "
       >
         <ProductImage
@@ -299,7 +300,7 @@ export function HeroCarousel() {
           to-rose-wash/30
           px-5 py-5
           sm:px-7 sm:py-7
-          md:h-full md:overflow-hidden md:px-8 md:py-7
+          md:px-8 md:py-9
           lg:px-10 lg:py-10
           xl:px-12
         "
@@ -337,22 +338,20 @@ export function HeroCarousel() {
         <h1
           className="
             mt-3
-            max-w-[17ch]
-            line-clamp-2
-            min-h-[3.9rem]
+            max-w-[19ch]
             text-3xl font-bold
             leading-[1.05]
             tracking-[-0.035em]
             text-ink
-            sm:min-h-[4.5rem] sm:text-4xl
-            lg:min-h-[5.9rem] lg:text-[2.8rem]
+            sm:text-4xl
+            lg:text-[2.7rem]
           "
         >
           {heroTitle}
         </h1>
 
         {/* Tipo + volume */}
-        <p className="mt-2 line-clamp-1 text-sm font-medium text-muted sm:text-base">
+        <p className="mt-2 text-sm font-medium leading-6 text-muted sm:text-base sm:leading-7">
           {heroMeta || "\u00A0"}
         </p>
 
