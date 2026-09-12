@@ -201,7 +201,7 @@ export function HeroCarousel() {
       aria-roledescription="carrossel"
       aria-label="Destaques da Rose Imports"
       className={`
-        grid overflow-hidden
+        grid
         bg-surface
         md:min-h-[500px]
         md:grid-cols-[0.88fr_1.12fr]
@@ -334,26 +334,28 @@ export function HeroCarousel() {
           )}
         </div>
 
-        {/* Nome */}
-        <h1
-          className="
-            mt-3
-            max-w-[19ch]
-            text-3xl font-bold
-            leading-[1.05]
-            tracking-[-0.035em]
-            text-ink
-            sm:text-4xl
-            lg:text-[2.7rem]
-          "
-        >
-          {heroTitle}
-        </h1>
+        <div className="mt-3 space-y-3">
+          {/* Nome */}
+          <h1
+            className="
+              max-w-[19ch]
+              break-words pb-1
+              text-3xl font-bold
+              leading-[1.14]
+              tracking-[-0.035em]
+              text-ink
+              sm:text-4xl sm:leading-[1.12]
+              lg:text-[2.7rem] lg:leading-[1.1]
+            "
+          >
+            {heroTitle}
+          </h1>
 
-        {/* Tipo + volume */}
-        <p className="mt-2 text-sm font-medium leading-6 text-muted sm:text-base sm:leading-7">
-          {heroMeta || "\u00A0"}
-        </p>
+          {/* Tipo + volume */}
+          <p className="block min-h-7 text-sm font-medium leading-7 text-muted sm:text-base">
+            {heroMeta || "\u00A0"}
+          </p>
+        </div>
 
         <div className="mt-3 h-[2px] w-10 rounded-full bg-rose/40 sm:mt-4" />
 
