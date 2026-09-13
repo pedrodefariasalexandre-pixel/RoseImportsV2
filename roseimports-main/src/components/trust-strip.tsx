@@ -1,7 +1,7 @@
 const ITEMS = [
   {
-    title: "Curadoria de importados",
-    text: "Produtos selecionados e informações claras.",
+    title: "Importados",
+    text: "Marca, tamanho e família olfativa em cada produto.",
     icon: "sparkles",
   },
   {

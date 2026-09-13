@@ -71,14 +71,14 @@ export const faq = [
 
 export const about = {
   intro:
-    "A Rose Imports reúne perfumes, body splashes e body creams em uma experiência de compra simples, direta e próxima.",
+    "A Rose Imports vende perfumes, body splashes, body creams e cosméticos importados.",
   body: [
-    "A proposta da loja é facilitar a escolha: informações essenciais, fotos claras e atendimento para concluir cada pedido com segurança.",
-    "A vitrine foi pensada para deixar produtos, versões e disponibilidade fáceis de encontrar, com atendimento próximo para ajudar quando necessário.",
+    "Cada produto traz foto, versão, tamanho e família olfativa. O que faltar, você pergunta no WhatsApp antes de fechar.",
+    "O catálogo filtra por categoria, gênero, família olfativa e faixa de preço, e mostra o que está disponível e o que está nas últimas unidades.",
   ],
   pillars: [
-    { title: "Produtos selecionados", text: "Uma curadoria organizada por categoria e perfil de compra." },
-    { title: "Compra simples", text: "Menos etapas e informações essenciais em destaque." },
-    { title: "Atendimento próximo", text: "Suporte para tirar dúvidas e concluir o pedido." },
+    { title: "Perfumes e cuidados corporais", text: "Perfume, body splash, body cream e cosméticos, de marcas importadas." },
+    { title: "Do carrinho ao WhatsApp", text: "Você escolhe a versão, monta o pedido e combina o fechamento com a loja." },
+    { title: "Dúvida antes de comprar", text: "Dá para perguntar sobre uma fragrância específica antes de fechar o pedido." },
   ],
 } as const;

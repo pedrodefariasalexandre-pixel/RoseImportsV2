@@ -14,7 +14,7 @@ import { formatCents } from "@/lib/money";
 const AUTOPLAY_MS = 7000;
 
 const DEFAULT_DESCRIPTION =
-  "Conheça uma seleção especial da Rose Imports e confira as opções disponíveis.";
+  "Perfumes, body splashes e body creams importados.";
 
 function summarize(description: string | null) {
   if (!description) return DEFAULT_DESCRIPTION;

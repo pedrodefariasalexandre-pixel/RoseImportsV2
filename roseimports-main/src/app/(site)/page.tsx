@@ -57,11 +57,7 @@ export default async function HomePage() {
       <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-14 lg:px-8">
           <div className="flex items-end justify-between gap-5">
             <div>
-              <p className="text-sm font-semibold text-gold">
-                Produtos que estão fazendo sucesso
-              </p>
-
-              <h2 className="mt-1 text-2xl font-bold tracking-[-0.02em] sm:text-3xl">
+              <h2 className="text-2xl font-bold tracking-[-0.02em] sm:text-3xl">
                 Mais vendidos
               </h2>
             </div>
@@ -98,12 +94,8 @@ export default async function HomePage() {
           ===================================================== */}
       <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-14 lg:px-8">
         <div className="mb-7">
-          <p className="text-sm font-semibold text-gold">
-            Para descobrir
-          </p>
-
-          <h2 className="mt-1 text-2xl font-bold tracking-[-0.02em] sm:text-3xl">
-            Encontre seu próximo favorito
+          <h2 className="text-2xl font-bold tracking-[-0.02em] sm:text-3xl">
+            Perfumes e body creams
           </h2>
         </div>
 
@@ -220,8 +212,8 @@ export default async function HomePage() {
               </h3>
 
               <p className="mt-2 max-w-md text-sm leading-6 text-white/80">
-                Cremes corporais com fragrâncias marcantes para completar
-                sua rotina de cuidados.
+                Cremes corporais de 200 ml, com a mesma fragrância dos
+                perfumes.
               </p>
 
               <span

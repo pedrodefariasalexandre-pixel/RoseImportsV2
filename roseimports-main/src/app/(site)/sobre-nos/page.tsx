@@ -7,7 +7,7 @@ import { whatsappContactUrl } from "@/lib/whatsapp";
 export const metadata: Metadata = {
   title: "Sobre nós",
   description:
-    "Conheça a Rose Imports, nossa forma de selecionar produtos e o atendimento próximo que acompanha cada pedido.",
+    "Perfumes, body splashes e body creams importados. Como funciona o pedido pelo site e o fechamento pelo WhatsApp.",
 };
 
 export default function SobreNosPage() {
@@ -17,7 +17,7 @@ export default function SobreNosPage() {
         <div className="max-w-2xl">
           <p className="text-sm font-semibold text-rose">Sobre a Rose Imports</p>
           <h1 className="mt-4 text-4xl leading-[1.05] sm:text-5xl lg:text-6xl">
-            Sua essência merece uma fragrância inesquecível.
+            Perfume importado, pedido fechado no WhatsApp.
           </h1>
           <p className="mt-6 max-w-xl text-base leading-8 text-ink-soft sm:text-lg">
             {about.intro}
@@ -58,7 +58,7 @@ export default function SobreNosPage() {
             />
           </div>
           <figcaption className="absolute -bottom-5 left-4 rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-ink shadow-lg sm:left-8">
-            Atendimento próximo, do começo ao fim.
+            Forquilhinha, SC.
           </figcaption>
         </figure>
       </section>
@@ -66,9 +66,9 @@ export default function SobreNosPage() {
       <section className="mt-8 bg-ink text-white sm:mt-12">
         <div className="mx-auto grid max-w-7xl gap-10 px-4 py-14 sm:px-6 sm:py-16 lg:grid-cols-[0.75fr_1.25fr] lg:gap-20 lg:px-8 lg:py-20">
           <div>
-            <p className="text-sm font-semibold text-rose-soft">Bem-vindo</p>
+            <p className="text-sm font-semibold text-rose-soft">Como comprar</p>
             <h2 className="mt-3 text-3xl leading-tight sm:text-4xl">
-              Um jeito simples e próximo de encontrar seu próximo favorito.
+              Você escolhe no site e fecha no WhatsApp.
             </h2>
           </div>
           <div className="grid gap-5 text-base leading-8 text-white/70">
@@ -81,9 +81,8 @@ export default function SobreNosPage() {
 
       <section className="mx-auto max-w-7xl px-4 py-14 sm:px-6 sm:py-20 lg:px-8">
         <div className="max-w-2xl">
-          <p className="text-sm font-semibold text-rose">O que importa para nós</p>
-          <h2 className="mt-3 text-3xl sm:text-4xl">
-            Cuidado em cada etapa da escolha
+          <h2 className="text-3xl sm:text-4xl">
+            O que você encontra aqui
           </h2>
         </div>
 
