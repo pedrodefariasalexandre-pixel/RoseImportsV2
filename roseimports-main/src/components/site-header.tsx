@@ -40,7 +40,7 @@ export function SiteHeader() {
   return (
     <header className="sticky top-0 z-40 border-b border-white/10 bg-black/95 text-ivory backdrop-blur-md">
       <div className="border-b border-white/10 bg-black">
-        <p className="mx-auto max-w-7xl px-3 py-2 text-center text-[0.58rem] font-medium uppercase tracking-[0.1em] text-gold-soft sm:px-6 sm:py-2.5 sm:text-xs sm:tracking-[0.16em] lg:px-8">
+        <p className="mx-auto max-w-7xl px-3 py-2 text-center text-[0.58rem] font-medium uppercase tracking-[0.1em] text-rose-soft sm:px-6 sm:py-2.5 sm:text-xs sm:tracking-[0.16em] lg:px-8">
           Rose Imports · perfumes e cuidados corporais
         </p>
       </div>
