@@ -10,10 +10,17 @@ import { FavoritesCount } from "@/components/favorites-count";
 import { HeaderSearch } from "@/components/header-search";
 import { whatsappContactUrl } from "@/lib/whatsapp";
 
-const NAV = [
-  { href: "/sobre-nos", label: "Sobre nós" },
+const CATEGORY_NAV = [
   { href: "/catalogo?categoria=perfumes", label: "Perfumes" },
+  { href: "/catalogo?categoria=body-splash", label: "Body Splash" },
   { href: "/catalogo?categoria=body-cream", label: "Body Cream" },
+  { href: "/catalogo?categoria=cosmeticos", label: "Cosméticos" },
+] as const;
+
+const ABOUT_NAV = { href: "/sobre-nos", label: "Sobre nós" } as const;
+
+const NAV = [
+  { href: "/catalogo?q=Victoria%27s+Secret", label: "Victoria’s Secret" },
   { href: "/catalogo?genero=masculino", label: "Masculino" },
   { href: "/catalogo?genero=feminino", label: "Feminino" },
   { href: "/catalogo", label: "Todos" },
@@ -22,10 +29,12 @@ const NAV = [
 
 export function SiteHeader() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [categoriesOpen, setCategoriesOpen] = useState(false);
   const pathname = usePathname();
 
   useEffect(() => {
     setMenuOpen(false);
+    setCategoriesOpen(false);
   }, [pathname]);
 
   return (
@@ -151,12 +160,57 @@ export function SiteHeader() {
         className="hidden border-t border-white/10 bg-black xl:block"
         aria-label="Principal"
       >
-        <div className="mx-auto flex max-w-7xl items-center justify-center gap-7 px-8 py-3.5 2xl:gap-9">
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-5 px-8 py-3.5 2xl:gap-8">
+          <Link
+            href={ABOUT_NAV.href}
+            className="whitespace-nowrap text-[0.8rem] font-semibold tracking-[0.01em] text-rose-soft transition-colors duration-200 hover:text-white 2xl:text-sm 2xl:tracking-[0.02em]"
+          >
+            {ABOUT_NAV.label}
+          </Link>
+
+          <div className="group relative">
+            <button
+              type="button"
+              className="flex items-center gap-1.5 whitespace-nowrap text-[0.8rem] font-semibold tracking-[0.01em] text-rose-soft transition-colors duration-200 group-hover:text-white group-focus-within:text-white 2xl:text-sm 2xl:tracking-[0.02em]"
+              aria-haspopup="menu"
+            >
+              Categorias
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.7"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="transition-transform duration-200 group-hover:rotate-180 group-focus-within:rotate-180"
+                aria-hidden
+              >
+                <path d="m6 9 6 6 6-6" />
+              </svg>
+            </button>
+
+            <div className="invisible absolute left-1/2 top-full z-50 w-56 -translate-x-1/2 translate-y-1 pt-4 opacity-0 transition-all duration-200 group-hover:visible group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:visible group-focus-within:translate-y-0 group-focus-within:opacity-100">
+              <div className="overflow-hidden rounded-2xl border border-white/10 bg-[#120f0e] p-2 shadow-[0_18px_45px_rgba(0,0,0,0.35)]">
+                {CATEGORY_NAV.map((item) => (
+                  <Link
+                    key={item.label}
+                    href={item.href}
+                    className="block rounded-xl px-4 py-3 text-sm font-medium text-ivory/85 transition-colors hover:bg-white/10 hover:text-rose-soft focus:bg-white/10 focus:text-rose-soft"
+                  >
+                    {item.label}
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </div>
+
           {NAV.map((item) => (
             <Link
               key={item.label}
               href={item.href}
-              className="text-sm font-semibold tracking-[0.02em] text-rose-soft transition-colors duration-200 hover:text-white"
+              className="whitespace-nowrap text-[0.8rem] font-semibold tracking-[0.01em] text-rose-soft transition-colors duration-200 hover:text-white 2xl:text-sm 2xl:tracking-[0.02em]"
             >
               {item.label}
             </Link>
@@ -182,10 +236,66 @@ export function SiteHeader() {
               </a>
             </li>
 
+            <li className="border-b border-white/10">
+              <Link
+                href={ABOUT_NAV.href}
+                onClick={() => setMenuOpen(false)}
+                className="block py-3.5 text-sm font-medium text-ivory/85 transition-colors hover:text-rose-soft"
+              >
+                {ABOUT_NAV.label}
+              </Link>
+            </li>
+
+            <li className="border-b border-white/10">
+              <button
+                type="button"
+                onClick={() => setCategoriesOpen((value) => !value)}
+                className="flex w-full items-center justify-between py-3.5 text-left text-sm font-medium text-ivory/85 transition-colors hover:text-rose-soft"
+                aria-expanded={categoriesOpen}
+                aria-controls="categorias-mobile"
+              >
+                Categorias
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.7"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className={`transition-transform duration-200 ${categoriesOpen ? "rotate-180" : ""}`}
+                  aria-hidden
+                >
+                  <path d="m6 9 6 6 6-6" />
+                </svg>
+              </button>
+
+              {categoriesOpen && (
+                <ul id="categorias-mobile" className="mb-3 rounded-xl bg-white/[0.04] px-3 py-1">
+                  {CATEGORY_NAV.map((item) => (
+                    <li key={item.label}>
+                      <Link
+                        href={item.href}
+                        onClick={() => {
+                          setMenuOpen(false);
+                          setCategoriesOpen(false);
+                        }}
+                        className="block py-2.5 text-sm text-rose-soft transition-colors hover:text-white"
+                      >
+                        {item.label}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </li>
+
             {NAV.map((item) => (
               <li key={item.label} className="border-b border-white/10">
                 <Link
                   href={item.href}
+                  onClick={() => setMenuOpen(false)}
                   className="block py-3.5 text-sm font-medium text-ivory/85 transition-colors hover:text-rose-soft"
                 >
                   {item.label}
