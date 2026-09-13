@@ -141,6 +141,7 @@ export function CatalogFilters({ categories, families }: Props) {
           options={[
             { value: "feminino", label: "Feminino" },
             { value: "masculino", label: "Masculino" },
+            { value: "unissex", label: "Unissex" },
           ]}
           allLabel="Todos"
         />

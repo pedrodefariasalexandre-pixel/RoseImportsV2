@@ -362,9 +362,10 @@ export async function getCatalogProducts(
 
     if (
       filters.genero === "feminino" ||
-      filters.genero === "masculino"
+      filters.genero === "masculino" ||
+      filters.genero === "unissex"
     ) {
-      next = next.in("gender", [filters.genero, "unissex"]);
+      next = next.eq("gender", filters.genero);
     }
 
     if (categoryId) {

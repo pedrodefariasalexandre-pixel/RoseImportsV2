@@ -43,7 +43,7 @@ export default async function ProdutoPage({ params }: { params: Params }) {
     product.brand && { label: "Marca", value: product.brand },
     product.categoryName && { label: "Categoria", value: product.categoryName },
     { label: "Tipo", value: PRODUCT_TYPE_LABEL[product.productType] ?? "—" },
-    product.gender && { label: "Perfil", value: GENDER_LABEL[product.gender] },
+    product.gender && { label: "Gênero", value: GENDER_LABEL[product.gender] },
     product.familyName && { label: "Família olfativa", value: product.familyName },
   ].filter(Boolean) as { label: string; value: string }[];
   const productWhatsappUrl = whatsappContactUrl(
@@ -101,7 +101,7 @@ export default async function ProdutoPage({ params }: { params: Params }) {
                 ))}
                 {product.gender && (
                   <span className="rounded-full border border-line px-3 py-1.5 text-xs font-medium text-muted">
-                    Perfil {GENDER_LABEL[product.gender].toLocaleLowerCase("pt-BR")}
+                    Gênero {GENDER_LABEL[product.gender].toLocaleLowerCase("pt-BR")}
                   </span>
                 )}
               </div>
@@ -121,7 +121,7 @@ export default async function ProdutoPage({ params }: { params: Params }) {
 
             {attributes.length > 0 && (
               <section className="mt-8">
-                <h2 className="text-xl font-semibold">Perfil do produto</h2>
+                <h2 className="text-xl font-semibold">Informações do produto</h2>
                 <dl className="mt-4 grid grid-cols-2 gap-3">
                   {attributes.map((attribute) => (
                     <div key={attribute.label} className="rounded-xl border border-line bg-surface px-4 py-3.5">

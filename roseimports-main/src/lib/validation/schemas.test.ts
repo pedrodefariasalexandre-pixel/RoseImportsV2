@@ -63,4 +63,71 @@ describe("createOrderSchema", () => {
 
     expect(result.success).toBe(false);
   });
+
+  it("recusa nome sem letras suficientes", () => {
+    for (const customerName of ["11", "@@", "A."]) {
+      const result = createOrderSchema.safeParse({
+        ...basePedido,
+        customerName,
+      });
+
+      expect(result.success).toBe(false);
+    }
+  });
+
+  it("aceita nomes reais com acento, apóstrofo e hífen", () => {
+    for (const customerName of ["João da Silva", "D'Ávila", "Maria-Luiza"]) {
+      const result = createOrderSchema.safeParse({
+        ...basePedido,
+        customerName,
+      });
+
+      expect(result.success).toBe(true);
+    }
+  });
+
+  it("recusa endereço de entrega com textos falsos e UF inexistente", () => {
+    const result = createOrderSchema.safeParse({
+      ...basePedido,
+      customerName: "Ana Souza",
+      fulfillmentType: "entrega",
+      cep: "88850-000",
+      street: "11",
+      number: "12@@",
+      complement: "@@",
+      neighborhood: "@@",
+      city: "11",
+      state: "99",
+    });
+
+    expect(result.success).toBe(false);
+    if (result.success) return;
+
+    expect(result.error.issues.map((issue) => issue.path[0])).toEqual(
+      expect.arrayContaining([
+        "street",
+        "number",
+        "complement",
+        "neighborhood",
+        "city",
+        "state",
+      ]),
+    );
+  });
+
+  it("aceita endereço brasileiro válido com UF em minúsculas", () => {
+    const result = createOrderSchema.safeParse({
+      ...basePedido,
+      customerName: "José D'Ávila",
+      fulfillmentType: "entrega",
+      cep: "88850-000",
+      street: "Rua 25 de Março",
+      number: "125-A",
+      neighborhood: "Santa Cruz",
+      city: "Forquilhinha",
+      state: "sc",
+    });
+
+    expect(result.success).toBe(true);
+  });
 });

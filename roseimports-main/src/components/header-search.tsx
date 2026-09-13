@@ -8,6 +8,7 @@ const QUICK_LINKS = [
   ["Body Cream", "/catalogo?categoria=body-cream"],
   ["Feminino", "/catalogo?genero=feminino"],
   ["Masculino", "/catalogo?genero=masculino"],
+  ["Unissex", "/catalogo?genero=unissex"],
 ] as const;
 
 function SearchIcon() {

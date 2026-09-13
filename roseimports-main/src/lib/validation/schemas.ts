@@ -18,13 +18,73 @@ const optionalText = (max: number) =>
     .optional()
     .or(z.literal(""));
 
+const BRAZILIAN_STATES = new Set([
+  "AC",
+  "AL",
+  "AP",
+  "AM",
+  "BA",
+  "CE",
+  "DF",
+  "ES",
+  "GO",
+  "MA",
+  "MT",
+  "MS",
+  "MG",
+  "PA",
+  "PB",
+  "PR",
+  "PE",
+  "PI",
+  "RJ",
+  "RN",
+  "RS",
+  "RO",
+  "RR",
+  "SC",
+  "SP",
+  "SE",
+  "TO",
+]);
+
+const PERSON_NAME = /^[\p{L}\p{M}][\p{L}\p{M} .'’-]*$/u;
+const ADDRESS_TEXT = /^[\p{L}\p{M}\d][\p{L}\p{M}\d .,ºª°'()’/-]*$/u;
+const ADDRESS_NUMBER = /^[\p{L}\p{M}\d][\p{L}\p{M}\d ºª°./-]*$/u;
+const CITY_NAME = /^[\p{L}\p{M}][\p{L}\p{M} .'’-]*$/u;
+
+function hasAtLeastTwoLetters(value: string | undefined): boolean {
+  return (value?.match(/\p{L}/gu)?.length ?? 0) >= 2;
+}
+
+function validAddressText(value: string | undefined): boolean {
+  const normalized = value?.trim() ?? "";
+  return hasAtLeastTwoLetters(normalized) && ADDRESS_TEXT.test(normalized);
+}
+
+function validOptionalAddressDetail(value: string | undefined): boolean {
+  const normalized = value?.trim() ?? "";
+  return (
+    normalized === "" ||
+    (ADDRESS_TEXT.test(normalized) && /[\p{L}\d]/u.test(normalized))
+  );
+}
+
 export const createOrderSchema = z
   .object({
     customerName: z
       .string()
       .trim()
       .min(2, "Informe seu nome.")
-      .max(80, "Nome muito longo."),
+      .max(80, "Nome muito longo.")
+      .regex(
+        PERSON_NAME,
+        "Informe um nome válido usando letras, espaços, hífen ou apóstrofo.",
+      )
+      .refine(
+        hasAtLeastTwoLetters,
+        "Informe um nome com pelo menos duas letras.",
+      ),
 
     fulfillmentType: z.enum([
       "retirada",
@@ -80,41 +140,51 @@ export const createOrderSchema = z
       /\D/g,
       "",
     );
+    const normalizedCep = data.cep?.trim() ?? "";
 
     require(
       "cep",
-      digits.length === 8,
+      digits.length === 8 && /^\d{5}-?\d{3}$/.test(normalizedCep),
       "Informe um CEP válido (8 dígitos).",
     );
 
     require(
       "street",
-      (data.street?.trim().length ?? 0) >= 2,
-      "Informe a rua.",
+      validAddressText(data.street),
+      "Informe uma rua válida.",
     );
 
     require(
       "number",
-      (data.number?.trim().length ?? 0) >= 1,
-      "Informe o número.",
+      (ADDRESS_NUMBER.test(data.number?.trim() ?? "") &&
+        /\d/.test(data.number?.trim() ?? "")) ||
+        /^s *\/? *n$/i.test(data.number?.trim() ?? ""),
+      "Informe um número válido ou S/N.",
+    );
+
+    require(
+      "complement",
+      validOptionalAddressDetail(data.complement),
+      "Informe um complemento válido.",
     );
 
     require(
       "neighborhood",
-      (data.neighborhood?.trim().length ?? 0) >= 2,
-      "Informe o bairro.",
+      validAddressText(data.neighborhood),
+      "Informe um bairro válido.",
     );
 
     require(
       "city",
-      (data.city?.trim().length ?? 0) >= 2,
-      "Informe a cidade.",
+      hasAtLeastTwoLetters(data.city) &&
+        CITY_NAME.test(data.city?.trim() ?? ""),
+      "Informe uma cidade válida.",
     );
 
     require(
       "state",
-      (data.state?.trim().length ?? 0) === 2,
-      "Informe a UF (2 letras).",
+      BRAZILIAN_STATES.has((data.state?.trim() ?? "").toUpperCase()),
+      "Informe uma UF brasileira válida.",
     );
   });
 
