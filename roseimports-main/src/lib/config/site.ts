@@ -71,7 +71,7 @@ export const faq = [
 
 export const about = {
   intro:
-    "Escolher uma fragrância é algo pessoal.",
+    "Escolher uma fragrância é algo pessoal",
   body: [
     "Encontre o que procura usando os filtros de categoria, gênero, família olfativa e faixa de preço.",
     "Na página de cada produto, você confere fotos, tamanhos e disponibilidade. Se alguma informação estiver faltando, é só chamar a gente no WhatsApp.",
