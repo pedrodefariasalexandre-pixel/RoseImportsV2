@@ -62,7 +62,7 @@ export function HeaderSearch({
         />
         <button
           type="submit"
-          className="absolute right-1.5 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-ink text-ivory transition-colors hover:bg-rose"
+          className="absolute right-1.5 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-rose text-white transition-colors hover:bg-rose-deep"
           aria-label="Pesquisar"
         >
           <SearchIcon />

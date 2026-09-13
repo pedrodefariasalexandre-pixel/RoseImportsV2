@@ -29,14 +29,14 @@ export function SiteHeader() {
   }, [pathname]);
 
   return (
-    <header className="sticky top-0 z-40 border-b border-line bg-ivory/95 backdrop-blur-md">
-      <div className="bg-ink">
+    <header className="sticky top-0 z-40 border-b border-white/10 bg-black/95 text-ivory backdrop-blur-md">
+      <div className="border-b border-white/10 bg-black">
         <p className="mx-auto max-w-7xl px-3 py-2 text-center text-[0.58rem] font-medium uppercase tracking-[0.1em] text-gold-soft sm:px-6 sm:py-2.5 sm:text-xs sm:tracking-[0.16em] lg:px-8">
           Rose Imports · perfumes e cuidados corporais
         </p>
       </div>
 
-      <div className="bg-ivory">
+      <div className="bg-black">
         <div className="mx-auto flex max-w-7xl items-center gap-2 px-4 py-2.5 sm:gap-3 sm:px-6 sm:py-3 lg:px-8 lg:py-4 xl:gap-5">
           <button
             type="button"
@@ -46,7 +46,7 @@ export function SiteHeader() {
             className="
               -ml-1 flex h-10 w-10 shrink-0 items-center justify-center
               rounded-lg transition-all duration-200
-              hover:bg-rose/10 hover:text-rose active:scale-95
+              hover:bg-white/10 hover:text-rose-soft active:scale-95
               xl:hidden
             "
             aria-expanded={menuOpen}
@@ -75,9 +75,8 @@ export function SiteHeader() {
           </button>
 
           <Logo
-            variant="mark"
+            variant="header"
             className="shrink-0"
-            imageClassName="!h-9 sm:!h-11 lg:!h-[52px]"
           />
 
           <HeaderSearch
@@ -88,8 +87,8 @@ export function SiteHeader() {
           <div className="ml-auto flex items-center gap-1 sm:gap-2">
             <AdminLink
               className="
-                hidden text-xs font-medium text-muted
-                transition-colors duration-200 hover:text-rose 2xl:inline
+                hidden text-xs font-medium text-ivory/70
+                transition-colors duration-200 hover:text-rose-soft 2xl:inline
               "
             />
 
@@ -99,7 +98,7 @@ export function SiteHeader() {
               className="
                 group flex h-10 items-center justify-center gap-2 rounded-lg px-2.5
                 text-sm font-medium transition-all duration-200
-                hover:bg-rose/10 hover:text-rose active:scale-[0.97]
+                hover:bg-white/10 hover:text-rose-soft active:scale-[0.97]
                 sm:px-3
               "
             >
@@ -149,7 +148,7 @@ export function SiteHeader() {
       </div>
 
       <nav
-        className="hidden border-t border-line bg-surface/80 xl:block"
+        className="hidden border-t border-white/10 bg-black xl:block"
         aria-label="Principal"
       >
         <div className="mx-auto flex max-w-7xl items-center justify-center gap-7 px-8 py-3.5 2xl:gap-9">
@@ -157,7 +156,7 @@ export function SiteHeader() {
             <Link
               key={item.label}
               href={item.href}
-              className="text-sm font-semibold tracking-[0.02em] text-ink-soft transition-colors duration-200 hover:text-rose"
+              className="text-sm font-semibold tracking-[0.02em] text-rose-soft transition-colors duration-200 hover:text-white"
             >
               {item.label}
             </Link>
@@ -168,36 +167,36 @@ export function SiteHeader() {
       {menuOpen && (
         <nav
           id="menu-principal"
-          className="border-t border-line bg-surface xl:hidden"
+          className="border-t border-white/10 bg-black xl:hidden"
           aria-label="Principal"
         >
           <ul className="mx-auto max-w-7xl px-4 py-3 sm:px-6 lg:px-8">
-            <li className="border-b border-line">
+            <li className="border-b border-white/10">
               <a
                 href={whatsappContactUrl()}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="block py-3.5 text-sm font-semibold text-rose transition-colors hover:text-rose-deep"
+                className="block py-3.5 text-sm font-semibold text-rose-soft transition-colors hover:text-white"
               >
                 Falar no WhatsApp
               </a>
             </li>
 
             {NAV.map((item) => (
-              <li key={item.label} className="border-b border-line">
+              <li key={item.label} className="border-b border-white/10">
                 <Link
                   href={item.href}
-                  className="block py-3.5 text-sm font-medium transition-colors hover:text-rose"
+                  className="block py-3.5 text-sm font-medium text-ivory/85 transition-colors hover:text-rose-soft"
                 >
                   {item.label}
                 </Link>
               </li>
             ))}
 
-            <li className="border-b border-line">
+            <li className="border-b border-white/10">
               <Link
                 href="/favoritos"
-                className="flex items-center gap-3 py-3.5 text-sm font-medium transition-colors hover:text-rose"
+                className="flex items-center gap-3 py-3.5 text-sm font-medium text-ivory/85 transition-colors hover:text-rose-soft"
               >
                 <svg
                   width="19"
@@ -217,7 +216,7 @@ export function SiteHeader() {
             </li>
 
             <li>
-              <AdminLink className="block py-3.5 text-sm font-medium text-rose" />
+              <AdminLink className="block py-3.5 text-sm font-medium text-rose-soft" />
             </li>
           </ul>
         </nav>

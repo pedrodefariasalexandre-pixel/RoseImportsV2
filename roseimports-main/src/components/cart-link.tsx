@@ -22,8 +22,8 @@ export function CartLink() {
         rounded-lg px-2.5
         text-sm font-medium
         transition-all duration-200
-        hover:bg-rose/10
-        hover:text-rose
+        hover:bg-white/10
+        hover:text-rose-soft
         active:scale-[0.97]
         sm:px-3
       "
