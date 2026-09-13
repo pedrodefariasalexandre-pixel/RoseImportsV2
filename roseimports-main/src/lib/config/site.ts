@@ -71,10 +71,10 @@ export const faq = [
 
 export const about = {
   intro:
-    "A Rose Imports vende perfumes, body splashes, body creams e cosméticos importados.",
+    "Escolher uma fragrância é algo pessoal.",
   body: [
-    "Cada produto traz foto, versão, tamanho e família olfativa. O que faltar, você pergunta no WhatsApp antes de fechar.",
-    "O catálogo filtra por categoria, gênero, família olfativa e faixa de preço, e mostra o que está disponível e o que está nas últimas unidades.",
+    "Encontre o que procura usando os filtros de categoria, gênero, família olfativa e faixa de preço.",
+    "Na página de cada produto, você confere fotos, tamanhos e disponibilidade. Se alguma informação estiver faltando, é só chamar a gente no WhatsApp.",
   ],
   pillars: [
     { title: "Perfumes e cuidados corporais", text: "Perfume, body splash, body cream e cosméticos, de marcas importadas." },

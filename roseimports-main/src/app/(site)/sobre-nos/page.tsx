@@ -23,8 +23,8 @@ export default function SobreNosPage() {
             {about.intro}
           </p>
           <p className="mt-4 max-w-xl text-sm leading-7 text-muted sm:text-base">
-            Aqui, cada pessoa pode conhecer os produtos no seu tempo e contar
-            com uma conversa de verdade quando precisar de ajuda.
+            Por aqui, você conhece perfumes e cuidados corporais importados no
+            seu tempo e conta com a nossa ajuda quando precisar.
           </p>
 
           <div className="mt-8 flex flex-wrap gap-3">
