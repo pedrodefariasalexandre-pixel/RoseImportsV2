@@ -2,6 +2,8 @@ import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { FooterSlot } from "@/components/footer-slot";
 import { HeaderSlot } from "@/components/header-slot";
+import { FeaturedCouponPopup } from "@/features/coupons/featured-coupon-popup";
+import { Suspense } from "react";
 
 export default function SiteLayout({
   children,
@@ -21,6 +23,10 @@ export default function SiteLayout({
       <FooterSlot>
         <SiteFooter />
       </FooterSlot>
+
+      <Suspense fallback={null}>
+        <FeaturedCouponPopup />
+      </Suspense>
     </div>
   );
 }

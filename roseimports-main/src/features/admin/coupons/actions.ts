@@ -1,6 +1,7 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
+import { FEATURED_COUPON_TAG } from "@/features/coupons/featured-coupon";
 
 import { requireAdminUser } from "@/lib/auth/admin";
 import { isCouponCodeLocked } from "@/lib/coupons";
@@ -23,6 +24,8 @@ async function requireAdmin() {
 }
 
 function revalidateCoupons() {
+  // O pop-up da loja lê os cupons da vitrine; salvar aqui atualiza na hora.
+  revalidateTag(FEATURED_COUPON_TAG);
   revalidatePath("/admin/cupons");
   revalidatePath("/admin/influenciadores");
 }
